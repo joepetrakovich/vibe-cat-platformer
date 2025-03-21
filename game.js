@@ -5,7 +5,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 300 },
+            gravity: { y: 1200 },
             debug: false
         }
     },
@@ -29,6 +29,12 @@ let player;
 let platforms;
 let goal;
 let gameWon = false;
+let leftButton;
+let rightButton;
+let jumpButton;
+let isLeftDown = false;
+let isRightDown = false;
+let isJumpDown = false;
 
 function preload() {
     // No assets to preload for now
@@ -78,24 +84,64 @@ function create() {
     });
     this.winText.setOrigin(0.5);
     this.winText.visible = false;
+
+    // Create mobile controls
+    const buttonAlpha = 0.5;
+    const buttonTint = 0xffffff;
+
+    // Left button
+    leftButton = this.add.rectangle(50, 560, 60, 60, 0x888888, buttonAlpha);
+    leftButton.setInteractive();
+    leftButton.setScrollFactor(0);
+    leftButton.setDepth(100);
+    
+    // Right button
+    rightButton = this.add.rectangle(120, 560, 60, 60, 0x888888, buttonAlpha);
+    rightButton.setInteractive();
+    rightButton.setScrollFactor(0);
+    rightButton.setDepth(100);
+    
+    // Jump button
+    jumpButton = this.add.circle(290, 560, 35, 0x888888, buttonAlpha);
+    jumpButton.setInteractive();
+    jumpButton.setScrollFactor(0);
+    jumpButton.setDepth(100);
+
+    // Add button labels
+    this.add.text(50, 560, '←', { fontSize: '32px', fill: '#000' }).setOrigin(0.5).setDepth(100);
+    this.add.text(120, 560, '→', { fontSize: '32px', fill: '#000' }).setOrigin(0.5).setDepth(100);
+    this.add.text(290, 560, '↑', { fontSize: '32px', fill: '#000' }).setOrigin(0.5).setDepth(100);
+
+    // Button event listeners
+    leftButton.on('pointerdown', () => { isLeftDown = true; });
+    leftButton.on('pointerup', () => { isLeftDown = false; });
+    leftButton.on('pointerout', () => { isLeftDown = false; });
+
+    rightButton.on('pointerdown', () => { isRightDown = true; });
+    rightButton.on('pointerup', () => { isRightDown = false; });
+    rightButton.on('pointerout', () => { isRightDown = false; });
+
+    jumpButton.on('pointerdown', () => { isJumpDown = true; });
+    jumpButton.on('pointerup', () => { isJumpDown = false; });
+    jumpButton.on('pointerout', () => { isJumpDown = false; });
 }
 
 function update() {
     if (gameWon) return;
     
-    // Handle input
+    // Handle input (keyboard and touch)
     const cursors = this.input.keyboard.createCursorKeys();
     
-    if (cursors.left.isDown) {
+    if (cursors.left.isDown || isLeftDown) {
         player.body.setVelocityX(-160);
-    } else if (cursors.right.isDown) {
+    } else if (cursors.right.isDown || isRightDown) {
         player.body.setVelocityX(160);
     } else {
         player.body.setVelocityX(0);
     }
     
-    if (cursors.up.isDown && player.body.touching.down) {
-        player.body.setVelocityY(-400);
+    if ((cursors.up.isDown || isJumpDown) && player.body.touching.down) {
+        player.body.setVelocityY(-800);
     }
 }
 
