@@ -1,7 +1,7 @@
 const config = {
     type: Phaser.AUTO,
-    width: 800,
-    height: 600,
+    width: 360,
+    height: 640,
     physics: {
         default: 'arcade',
         arcade: {
@@ -13,6 +13,13 @@ const config = {
         preload: preload,
         create: create,
         update: update
+    },
+    scale: {
+        mode: Phaser.Scale.FIT,
+        autoCenter: Phaser.Scale.CENTER_BOTH,
+        parent: 'game',
+        width: 360,
+        height: 640
     }
 };
 
@@ -28,35 +35,36 @@ function preload() {
 }
 
 function create() {
-    // Create platformssS
+    // Create platforms
     platforms = this.physics.add.staticGroup();
     
     // Add ground - create a white rectangle for the ground
-    const ground = this.add.rectangle(400, 580, 800, 20, 0x888888);
+    const ground = this.add.rectangle(180, 620, 360, 20, 0x888888);
     platforms.add(ground);
     
     // Add platforms - create rectangles for each platform
     const platformPositions = [
-        { x: 600, y: 450 },
-        { x: 200, y: 350 },
-        { x: 600, y: 250 },
-        { x: 200, y: 150 }
+        { x: 270, y: 520 },
+        { x: 90, y: 420 },
+        { x: 270, y: 320 },
+        { x: 90, y: 220 },
+        { x: 270, y: 120 }  // Added an extra platform
     ];
 
     platformPositions.forEach(pos => {
-        const platform = this.add.rectangle(pos.x, pos.y, 200, 20, 0x888888);
+        const platform = this.add.rectangle(pos.x, pos.y, 120, 20, 0x888888);
         platforms.add(platform);
     });
     
     // Create player
-    player = this.add.rectangle(100, 450, 32, 48, 0x00ff00);
+    player = this.add.rectangle(90, 550, 32, 48, 0x00ff00);
     this.physics.add.existing(player);
     
     player.body.setBounce(0.2);
     player.body.setCollideWorldBounds(true);
     
     // Create goal
-    goal = this.add.rectangle(700, 100, 32, 32, 0xffff00);
+    goal = this.add.rectangle(270, 70, 32, 32, 0xffff00);
     this.physics.add.existing(goal, true);
     
     // Add colliders
@@ -64,8 +72,8 @@ function create() {
     this.physics.add.overlap(player, goal, reachGoal, null, this);
     
     // Add text for winning message
-    this.winText = this.add.text(400, 300, 'You Win!', {
-        fontSize: '64px',
+    this.winText = this.add.text(180, 320, 'You Win!', {
+        fontSize: '48px',
         fill: '#fff'
     });
     this.winText.setOrigin(0.5);

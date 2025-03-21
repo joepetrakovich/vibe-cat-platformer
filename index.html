@@ -8,18 +8,30 @@
     <style>
         body {
             margin: 0;
+            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
             background-color: #333;
+            overflow: hidden;
+        }
+        #game {
+            width: 100vw;
+            height: 100vh;
+            display: flex;
+            justify-content: center;
+            align-items: center;
         }
         canvas {
-            border: 2px solid #fff;
+            max-width: 100%;
+            max-height: 100%;
+            object-fit: contain;
         }
     </style>
 </head>
 <body>
+    <div id="game"></div>
     <script src="game.js"></script>
 </body>
 </html> 
