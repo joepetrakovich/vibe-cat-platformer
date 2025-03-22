@@ -150,7 +150,7 @@ function update() {
     const input = {
         left: cursors.left.isDown || isLeftDown,
         right: cursors.right.isDown || isRightDown,
-        jump: cursors.up.isDown || isJumpDown
+        jump: cursors.space.isDown || isJumpDown
     };
     
     // Update character state machine

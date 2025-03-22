@@ -11,7 +11,7 @@ export class Character {
         
         // Adjust the physics body size to match the scaled sprite
         this.sprite.body.setSize(20, 30); // Half the sprite size to make collision feel better
-        this.sprite.body.setOffset(10, 10);
+        this.sprite.body.setOffset(10, 3);
         
         this.velocity = {
             x: 0,
