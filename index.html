@@ -1,40 +1,25 @@
 <!DOCTYPE html>
-<html lang="en">
+<html>
 <head>
-    <meta charset="UTF-8">
-    <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
-    <title>Platform Climber</title>
-    <script src="node_modules/phaser/dist/phaser.min.js"></script>
+    <title>Platform Game</title>
+    <script src="https://cdn.jsdelivr.net/npm/phaser@3.55.2/dist/phaser.min.js"></script>
     <style>
         body {
             margin: 0;
-            padding: 0;
             display: flex;
             justify-content: center;
             align-items: center;
             min-height: 100vh;
-            background-color: #333;
-            overflow: hidden;
+            background: #333;
         }
         #game {
-            width: 100vw;
-            height: 100vh;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-        }
-        canvas {
             max-width: 100%;
-            max-height: 100%;
-            object-fit: contain;
+            max-height: 100vh;
         }
     </style>
 </head>
 <body>
     <div id="game"></div>
-    <script src="game.js?v=1"></script>
+    <script type="module" src="game.js"></script>
 </body>
 </html> 

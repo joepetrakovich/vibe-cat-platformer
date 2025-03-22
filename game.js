@@ -1,3 +1,7 @@
+import { World } from './World.js';
+import { Character } from './Character.js';
+import { CharacterStateMachine } from './CharacterStateMachine.js';
+
 const config = {
     type: Phaser.AUTO,
     width: 360,
@@ -25,8 +29,9 @@ const config = {
 
 const game = new Phaser.Game(config);
 
-let player;
-let platforms;
+let world;
+let character;
+let characterStateMachine;
 let goal;
 let gameWon = false;
 let leftButton;
@@ -35,47 +40,53 @@ let jumpButton;
 let isLeftDown = false;
 let isRightDown = false;
 let isJumpDown = false;
+let stateText;
+let groundText;
 
 function preload() {
     // No assets to preload for now
 }
 
 function create() {
-    // Create platforms
-    platforms = this.physics.add.staticGroup();
+    // Create world
+    world = new World(this);
     
-    // Add ground - create a white rectangle for the ground
-    const ground = this.add.rectangle(180, 620, 360, 20, 0x888888);
-    platforms.add(ground);
+    // Create character
+    character = new Character(this, 90, 550);
+    world.addCharacterCollider(character);
     
-    // Add platforms - create rectangles for each platform
-    const platformPositions = [
-        { x: 270, y: 520 },
-        { x: 90, y: 420 },
-        { x: 270, y: 320 },
-        { x: 90, y: 220 },
-        { x: 270, y: 120 }  // Added an extra platform
-    ];
-
-    platformPositions.forEach(pos => {
-        const platform = this.add.rectangle(pos.x, pos.y, 120, 20, 0x888888);
-        platforms.add(platform);
+    // Create state machine
+    characterStateMachine = new CharacterStateMachine(character, world);
+    
+    // Add debug text for state
+    stateText = this.add.text(10, 10, 'State: idle', {
+        fontSize: '20px',
+        fill: '#fff',
+        backgroundColor: '#000',
+        padding: { x: 10, y: 5 }
     });
+    stateText.setScrollFactor(0);
+    stateText.setDepth(100);
     
-    // Create player
-    player = this.add.rectangle(90, 550, 32, 48, 0x00ff00);
-    this.physics.add.existing(player);
+    // Add debug text for ground state
+    groundText = this.add.text(10, 40, 'OnGround: true', {
+        fontSize: '20px',
+        fill: '#fff',
+        backgroundColor: '#000',
+        padding: { x: 10, y: 5 }
+    });
+    groundText.setScrollFactor(0);
+    groundText.setDepth(100);
     
-    player.body.setBounce(0.2);
-    player.body.setCollideWorldBounds(true);
+    // Set up state change callback
+    characterStateMachine.onStateChange = (newState) => {
+        stateText.setText('State: ' + newState);
+    };
     
     // Create goal
     goal = this.add.rectangle(270, 70, 32, 32, 0xffff00);
     this.physics.add.existing(goal, true);
-    
-    // Add colliders
-    this.physics.add.collider(player, platforms);
-    this.physics.add.overlap(player, goal, reachGoal, null, this);
+    this.physics.add.overlap(character.sprite, goal, reachGoal, null, this);
     
     // Add text for winning message
     this.winText = this.add.text(180, 320, 'You Win!', {
@@ -87,8 +98,7 @@ function create() {
 
     // Create mobile controls
     const buttonAlpha = 0.5;
-    const buttonTint = 0xffffff;
-
+    
     // Left button
     leftButton = this.add.rectangle(50, 560, 60, 60, 0x888888, buttonAlpha);
     leftButton.setInteractive();
@@ -132,23 +142,23 @@ function update() {
     // Handle input (keyboard and touch)
     const cursors = this.input.keyboard.createCursorKeys();
     
-    if (cursors.left.isDown || isLeftDown) {
-        player.body.setVelocityX(-160);
-    } else if (cursors.right.isDown || isRightDown) {
-        player.body.setVelocityX(160);
-    } else {
-        player.body.setVelocityX(0);
-    }
+    const input = {
+        left: cursors.left.isDown || isLeftDown,
+        right: cursors.right.isDown || isRightDown,
+        jump: cursors.up.isDown || isJumpDown
+    };
     
-    if ((cursors.up.isDown || isJumpDown) && player.body.touching.down) {
-        player.body.setVelocityY(-800);
-    }
+    // Update character state machine
+    characterStateMachine.update(input);
+    
+    // Update ground state debug text
+    groundText.setText('OnGround: ' + character.isOnGround());
 }
 
 function reachGoal() {
     if (!gameWon) {
         gameWon = true;
         this.winText.visible = true;
-        player.body.setVelocity(0, 0);
+        character.setVelocity(0, 0);
     }
 } 
