@@ -8,7 +8,7 @@ export class World {
 
     setupPlatforms() {
         // Add ground
-        const ground = this.scene.add.rectangle(200, 600, 400, 20, 0x888888);
+        const ground = this.scene.add.rectangle(200, 600, 400, 40, 0x888888);
         this.platforms.add(ground);
         
         // Add platforms

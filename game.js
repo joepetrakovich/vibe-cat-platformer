@@ -69,11 +69,55 @@ function preload() {
     this.load.spritesheet('food', 'assets/food3.png?v=' + version, { frameWidth: 32, frameHeight: 32 });
     this.load.audio('boing', 'assets/sounds/Jump2.wav?v=' + version);
     this.load.audio('win', 'assets/sounds/Checkpoint.wav?v=' + version);
+    
+    // Load night background assets
+    this.load.image('night-sky', 'assets/night/night sky.png?v=' + version);
+    this.load.image('night-buildings-back', 'assets/night/night buildings back.png?v=' + version);
+    this.load.image('night-buildings-front', 'assets/night/night buildings front.png?v=' + version);
+    this.load.image('night-fence', 'assets/night/night fence.png?v=' + version);
+    this.load.image('night-bush', 'assets/night/night bush.png?v=' + version);
 }
 
 function create() {
     // Create world
     world = new World(this);
+    
+    // Add night background elements
+    const gameWidth = this.cameras.main.width;
+    const gameHeight = GAME_HEIGHT;
+    
+    // Night sky (background)
+    this.add.image(gameWidth/2, gameHeight/2, 'night-sky')
+        .setDisplaySize(gameWidth, gameHeight)
+        .setDepth(-5);
+    
+    // Buildings back
+    this.add.image(gameWidth/2, gameHeight - 300, 'night-buildings-back')
+        .setOrigin(0.5, 0)
+        .setDisplaySize(gameWidth, 200)
+        .setDepth(-4);
+    
+    // Buildings front
+    this.add.image(gameWidth/2, gameHeight - 200, 'night-buildings-front')
+        .setOrigin(0.5, 0)
+        .setDisplaySize(gameWidth, 150)
+        .setDepth(-3);
+    
+    // Fence
+    this.add.image(gameWidth/2, gameHeight - 100, 'night-fence')
+        .setOrigin(0.5, 0)
+        .setDisplaySize(gameWidth, 60)
+        .setDepth(-2);
+    
+    // Bush
+    this.add.image(gameWidth/2, gameHeight - 60, 'night-bush')
+        .setOrigin(0.5, 0)
+        .setDisplaySize(gameWidth, 60)
+        .setDepth(-1);
+    
+    // Add dark veil/overlay to dim the background
+    const darkVeil = this.add.rectangle(gameWidth/2, gameHeight/2, gameWidth, gameHeight, 0x000033, 0.8);
+    darkVeil.setDepth(-0.5);
     
     // Add control bar background
     const controlBar = this.add.rectangle(200, GAME_HEIGHT + (CONTROLS_HEIGHT/2), 400, CONTROLS_HEIGHT, 0x333333);
