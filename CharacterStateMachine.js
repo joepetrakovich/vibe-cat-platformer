@@ -85,6 +85,7 @@ class WalkingState extends CharacterState {
 
 class JumpingState extends CharacterState {
     enter() {
+        this.jumpStartTime = Date.now();
         // Only apply jump force if we're actually on the ground
         if (this.character.isOnGround()) {
             this.character.setVelocity(this.character.velocity.x, -this.character.jumpForce);
@@ -95,14 +96,17 @@ class JumpingState extends CharacterState {
     }
     
     update(input) {
+        const MIN_JUMP_TIME = 150; // Minimum time in ms before allowing ground transition
+        const currentTime = Date.now();
+        
         // Check if we've reached the peak of our jump (velocity becomes positive)
         if (this.character.velocity.y > 0) {
             this.stateMachine.transition('falling');
             return;
         }
 
-        // Only transition to idle when landing
-        if (this.character.isOnGround()) {
+        // Only transition to idle when landing and minimum jump time has passed
+        if (this.character.isOnGround() && (currentTime - this.jumpStartTime) > MIN_JUMP_TIME) {
             this.stateMachine.transition('idle');
             return;
         }

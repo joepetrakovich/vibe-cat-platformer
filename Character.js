@@ -10,9 +10,9 @@ export class Character {
         this.sprite.body.setBounce(0);
         this.sprite.body.setCollideWorldBounds(true);
         
-        // Adjust the physics body size to be a bit larger for better ground detection
-        this.sprite.body.setSize(14, 14); // Slightly larger collision box
-        this.sprite.body.setOffset(13, 18); // Adjusted offset to match visual
+        // Adjust the physics body size to be narrower and taller for more precise ground detection
+        this.sprite.body.setSize(12, 16); // Narrower and taller collision box
+        this.sprite.body.setOffset(14, 16); // Adjusted offset to match visual better
         
         this.velocity = {
             x: 0,
