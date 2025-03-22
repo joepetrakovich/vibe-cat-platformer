@@ -49,6 +49,7 @@ function preload() {
     this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png', { frameWidth: 40, frameHeight: 40 });
     this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png', { frameWidth: 40, frameHeight: 40 });
     this.load.audio('boing', 'assets/sounds/Jump2.wav');
+    this.load.audio('win', 'assets/sounds/Checkpoint.wav');
 }
 
 function create() {
@@ -164,5 +165,6 @@ function reachGoal() {
         gameWon = true;
         this.winText.visible = true;
         character.setVelocity(0, 0);
+        this.sound.play('win', { volume: 0.35 });
     }
 } 
