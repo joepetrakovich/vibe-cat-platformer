@@ -149,13 +149,60 @@ function create() {
     this.add.text(320, controlsY, '↑', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5).setDepth(100);
 
     // Button event listeners
-    leftButton.on('pointerdown', () => { isLeftDown = true; });
-    leftButton.on('pointerup', () => { isLeftDown = false; });
-    leftButton.on('pointerout', () => { isLeftDown = false; });
+    leftButton.on('pointerdown', (pointer) => { 
+        isLeftDown = true;
+        handleTouchMove(pointer);
+    });
+    leftButton.on('pointerup', () => { 
+        isLeftDown = false;
+        isRightDown = false; // Reset right button state when releasing left
+    });
+    leftButton.on('pointerout', () => { 
+        isLeftDown = false;
+        isRightDown = false; // Reset right button state when leaving left
+    });
 
-    rightButton.on('pointerdown', () => { isRightDown = true; });
-    rightButton.on('pointerup', () => { isRightDown = false; });
-    rightButton.on('pointerout', () => { isRightDown = false; });
+    rightButton.on('pointerdown', (pointer) => { 
+        isRightDown = true;
+        handleTouchMove(pointer);
+    });
+    rightButton.on('pointerup', () => { 
+        isRightDown = false;
+        isLeftDown = false; // Reset left button state when releasing right
+    });
+    rightButton.on('pointerout', () => { 
+        isRightDown = false;
+        isLeftDown = false; // Reset left button state when leaving right
+    });
+
+    // Add pointer move event listener to the game
+    this.input.on('pointermove', (pointer) => {
+        if (pointer.isDown) {
+            handleTouchMove(pointer);
+        }
+    });
+
+    function handleTouchMove(pointer) {
+        // Get the x position of the touch
+        const touchX = pointer.x;
+        
+        // Define the control area boundaries
+        const leftButtonRight = leftButton.x + leftButton.width/2;
+        const rightButtonLeft = rightButton.x - rightButton.width/2;
+        
+        // Update movement states based on touch position
+        if (touchX <= leftButtonRight) {
+            isLeftDown = true;
+            isRightDown = false;
+        } else if (touchX >= rightButtonLeft) {
+            isRightDown = true;
+            isLeftDown = false;
+        } else {
+            // If touch is between buttons, stop movement
+            isLeftDown = false;
+            isRightDown = false;
+        }
+    }
 
     jumpButton.on('pointerdown', () => { isJumpDown = true; });
     jumpButton.on('pointerup', () => { isJumpDown = false; });
