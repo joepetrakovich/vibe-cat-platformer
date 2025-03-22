@@ -10,7 +10,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 1200 },
-            debug: false
+            debug: true
         }
     },
     scene: {
@@ -52,6 +52,8 @@ let jumpButton;
 let isLeftDown = false;
 let isRightDown = false;
 let isJumpDown = false;
+let wasJumpDown = false;  // Track previous jump button state
+let canJump = true;       // Track if we can process a new jump
 let stateText;
 let groundText;
 
@@ -60,9 +62,9 @@ function preload() {
     const version = Date.now();
     
     // Load cat spritesheets
-    this.load.spritesheet('cat-idle', 'assets/cat01_spritesheets/cat01_idle_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 40 });
-    this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 40 });
-    this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png?v=' + version, { frameWidth: 40, frameHeight: 40 });
+    this.load.spritesheet('cat-idle', 'assets/cat01_spritesheets/cat01_idle_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
+    this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
+    this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
     this.load.audio('boing', 'assets/sounds/Jump2.wav?v=' + version);
     this.load.audio('win', 'assets/sounds/Checkpoint.wav?v=' + version);
 }
@@ -183,25 +185,39 @@ function create() {
     });
 
     function handleTouchMove(pointer) {
-        // Get the x position of the touch
+        // Get the touch position
         const touchX = pointer.x;
+        const touchY = pointer.y;
         
-        // Define the control area boundaries
-        const leftButtonRight = leftButton.x + leftButton.width/2;
-        const rightButtonLeft = rightButton.x - rightButton.width/2;
+        // Define the control area boundaries for both buttons
+        const leftButtonBounds = {
+            left: leftButton.x - leftButton.width/2,
+            right: leftButton.x + leftButton.width/2,
+            top: leftButton.y - leftButton.height/2,
+            bottom: leftButton.y + leftButton.height/2
+        };
+        
+        const rightButtonBounds = {
+            left: rightButton.x - rightButton.width/2,
+            right: rightButton.x + rightButton.width/2,
+            top: rightButton.y - rightButton.height/2,
+            bottom: rightButton.y + rightButton.height/2
+        };
+        
+        // Check if touch is within button boundaries
+        const touchingLeftButton = touchX >= leftButtonBounds.left && 
+                                 touchX <= leftButtonBounds.right && 
+                                 touchY >= leftButtonBounds.top && 
+                                 touchY <= leftButtonBounds.bottom;
+                                 
+        const touchingRightButton = touchX >= rightButtonBounds.left && 
+                                  touchX <= rightButtonBounds.right && 
+                                  touchY >= rightButtonBounds.top && 
+                                  touchY <= rightButtonBounds.bottom;
         
         // Update movement states based on touch position
-        if (touchX <= leftButtonRight) {
-            isLeftDown = true;
-            isRightDown = false;
-        } else if (touchX >= rightButtonLeft) {
-            isRightDown = true;
-            isLeftDown = false;
-        } else {
-            // If touch is between buttons, stop movement
-            isLeftDown = false;
-            isRightDown = false;
-        }
+        isLeftDown = touchingLeftButton;
+        isRightDown = touchingRightButton;
     }
 
     jumpButton.on('pointerdown', () => { isJumpDown = true; });
@@ -215,11 +231,25 @@ function update() {
     // Handle input (keyboard and touch)
     const cursors = this.input.keyboard.createCursorKeys();
     
+    // Track if jump button/key was just pressed this frame
+    const jumpPressed = (cursors.up.isDown || cursors.space.isDown || isJumpDown);
+    
+    // Only allow jumping if we're on the ground and not already jumping/falling
+    const currentState = characterStateMachine.getCurrentState();
+    const canJumpNow = character.isOnGround() && 
+                      currentState !== characterStateMachine.states.jumping &&
+                      currentState !== characterStateMachine.states.falling;
+    
+    const jumpJustPressed = jumpPressed && !wasJumpDown && canJumpNow;
+    
     const input = {
         left: cursors.left.isDown || isLeftDown,
         right: cursors.right.isDown || isRightDown,
-        jump: cursors.space.isDown || isJumpDown
+        jump: jumpJustPressed
     };
+    
+    // Update previous jump state
+    wasJumpDown = jumpPressed;
     
     // Update character state machine
     characterStateMachine.update(input);

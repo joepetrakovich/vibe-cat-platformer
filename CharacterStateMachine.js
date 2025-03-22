@@ -93,7 +93,7 @@ class JumpingState extends CharacterState {
             this.character.sprite.scene.sound.play('boing', { volume: 0.25 });
         }
     }
-
+    
     update(input) {
         // Check if we've reached the peak of our jump (velocity becomes positive)
         if (this.character.velocity.y > 0) {

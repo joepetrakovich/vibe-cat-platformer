@@ -4,14 +4,14 @@ export class Character {
         scene.physics.add.existing(this.sprite);
         
         // Scale up the sprite
-        this.sprite.setScale(2);
+        this.sprite.setScale(3);
         
         this.sprite.body.setBounce(0.2);
         this.sprite.body.setCollideWorldBounds(true);
         
         // Adjust the physics body size to match the scaled sprite
-        this.sprite.body.setSize(20, 30); // Half the sprite size to make collision feel better
-        this.sprite.body.setOffset(10, 3);
+        this.sprite.body.setSize(12, 12); // Half the sprite size to make collision feel better
+        this.sprite.body.setOffset(14, 20);
         
         this.velocity = {
             x: 0,
@@ -19,7 +19,11 @@ export class Character {
         };
         
         this.moveSpeed = 160;
-        this.jumpForce = 800;
+        this.jumpForce = 1500;
+        this.maxFallSpeed = 600;  // Maximum falling speed
+        
+        // Set the maximum vertical velocity
+        this.sprite.body.setMaxVelocityY(this.maxFallSpeed);
 
         // Create animations with corrected frame counts and slower frameRate
         scene.anims.create({
