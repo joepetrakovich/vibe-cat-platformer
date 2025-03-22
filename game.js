@@ -44,7 +44,10 @@ let stateText;
 let groundText;
 
 function preload() {
-    // No assets to preload for now
+    // Load cat spritesheets
+    this.load.spritesheet('cat-idle', 'assets/cat01_spritesheets/cat01_idle_strip8.png', { frameWidth: 40, frameHeight: 40 });
+    this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png', { frameWidth: 40, frameHeight: 40 });
+    this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png', { frameWidth: 40, frameHeight: 40 });
 }
 
 function create() {

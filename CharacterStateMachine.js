@@ -46,6 +46,7 @@ class CharacterState {
 class IdleState extends CharacterState {
     enter() {
         this.character.setVelocity(0, 0);
+        this.character.sprite.play('idle');
     }
 
     update(input) {
@@ -58,13 +59,19 @@ class IdleState extends CharacterState {
 }
 
 class WalkingState extends CharacterState {
+    enter() {
+        this.character.sprite.play('walk');
+    }
+
     update(input) {
         if (input.jump && this.character.isOnGround()) {
             this.stateMachine.transition('jumping');
         } else if (input.left) {
             this.character.setVelocity(-this.character.moveSpeed, this.character.velocity.y);
+            this.character.sprite.setFlipX(true);
         } else if (input.right) {
             this.character.setVelocity(this.character.moveSpeed, this.character.velocity.y);
+            this.character.sprite.setFlipX(false);
         } else {
             this.stateMachine.transition('idle');
         }
@@ -76,6 +83,7 @@ class JumpingState extends CharacterState {
         // Only apply jump force if we're actually on the ground
         if (this.character.isOnGround()) {
             this.character.setVelocity(this.character.velocity.x, -this.character.jumpForce);
+            this.character.sprite.play('jump');
         }
     }
 
@@ -89,8 +97,10 @@ class JumpingState extends CharacterState {
         // Allow horizontal movement while in air without state changes
         if (input.left) {
             this.character.sprite.x -= this.character.moveSpeed / 60;
+            this.character.sprite.setFlipX(true);
         } else if (input.right) {
             this.character.sprite.x += this.character.moveSpeed / 60;
+            this.character.sprite.setFlipX(false);
         }
     }
 } 

@@ -1,6 +1,6 @@
 export class Character {
     constructor(scene, x, y) {
-        this.sprite = scene.add.rectangle(x, y, 32, 48, 0x00ff00);
+        this.sprite = scene.add.sprite(x, y, 'cat-idle');
         scene.physics.add.existing(this.sprite);
         
         this.sprite.body.setBounce(0.2);
@@ -13,6 +13,31 @@ export class Character {
         
         this.moveSpeed = 160;
         this.jumpForce = 800;
+
+        // Create animations
+        scene.anims.create({
+            key: 'idle',
+            frames: scene.anims.generateFrameNumbers('cat-idle', { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: -1
+        });
+
+        scene.anims.create({
+            key: 'walk',
+            frames: scene.anims.generateFrameNumbers('cat-walk', { start: 0, end: 5 }),
+            frameRate: 10,
+            repeat: -1
+        });
+
+        scene.anims.create({
+            key: 'jump',
+            frames: scene.anims.generateFrameNumbers('cat-jump', { start: 0, end: 3 }),
+            frameRate: 10,
+            repeat: 0
+        });
+
+        // Start with idle animation
+        this.sprite.play('idle');
     }
 
     setVelocity(x, y) {
