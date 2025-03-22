@@ -5,7 +5,8 @@ export class CharacterStateMachine {
         this.states = {
             idle: new IdleState(this),
             walking: new WalkingState(this),
-            jumping: new JumpingState(this)
+            jumping: new JumpingState(this),
+            falling: new FallingState(this)
         };
         this.currentState = this.states.idle;
         this.onStateChange = null;
@@ -50,7 +51,9 @@ class IdleState extends CharacterState {
     }
 
     update(input) {
-        if (input.jump && this.character.isOnGround()) {
+        if (!this.character.isOnGround()) {
+            this.stateMachine.transition('falling');
+        } else if (input.jump && this.character.isOnGround()) {
             this.stateMachine.transition('jumping');
         } else if (input.left || input.right) {
             this.stateMachine.transition('walking');
@@ -64,7 +67,9 @@ class WalkingState extends CharacterState {
     }
 
     update(input) {
-        if (input.jump && this.character.isOnGround()) {
+        if (!this.character.isOnGround()) {
+            this.stateMachine.transition('falling');
+        } else if (input.jump && this.character.isOnGround()) {
             this.stateMachine.transition('jumping');
         } else if (input.left) {
             this.character.setVelocity(-this.character.moveSpeed, this.character.velocity.y);
@@ -88,6 +93,12 @@ class JumpingState extends CharacterState {
     }
 
     update(input) {
+        // Check if we've reached the peak of our jump (velocity becomes positive)
+        if (this.character.velocity.y > 0) {
+            this.stateMachine.transition('falling');
+            return;
+        }
+
         // Only transition to idle when landing
         if (this.character.isOnGround()) {
             this.stateMachine.transition('idle');
@@ -95,6 +106,28 @@ class JumpingState extends CharacterState {
         }
 
         // Allow horizontal movement while in air without state changes
+        if (input.left) {
+            this.character.sprite.x -= this.character.moveSpeed / 60;
+            this.character.sprite.setFlipX(true);
+        } else if (input.right) {
+            this.character.sprite.x += this.character.moveSpeed / 60;
+            this.character.sprite.setFlipX(false);
+        }
+    }
+}
+
+class FallingState extends CharacterState {
+    enter() {
+        this.character.sprite.play('fall');
+    }
+
+    update(input) {
+        if (this.character.isOnGround()) {
+            this.stateMachine.transition('idle');
+            return;
+        }
+
+        // Allow horizontal movement while falling
         if (input.left) {
             this.character.sprite.x -= this.character.moveSpeed / 60;
             this.character.sprite.setFlipX(true);
