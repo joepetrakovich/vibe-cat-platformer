@@ -89,6 +89,8 @@ class JumpingState extends CharacterState {
         if (this.character.isOnGround()) {
             this.character.setVelocity(this.character.velocity.x, -this.character.jumpForce);
             this.character.sprite.play('jump');
+            // Play the jump sound effect at half volume
+            this.character.sprite.scene.sound.play('boing', { volume: 0.25 });
         }
     }
 
