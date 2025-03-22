@@ -52,7 +52,6 @@ let jumpButton;
 let isLeftDown = false;
 let isRightDown = false;
 let isJumpDown = false;
-let wasJumpDown = false;  // Track previous jump button state
 let canJump = true;       // Track if we can process a new jump
 let lastJumpTime = 0;     // Track the last time we jumped
 const JUMP_BUFFER = 150;  // Buffer time in ms between jumps
@@ -153,88 +152,48 @@ function create() {
     this.add.text(320, controlsY, '↑', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5).setDepth(100);
 
     // Button event listeners
-    leftButton.on('pointerdown', (pointer) => { 
+    leftButton.on('pointerdown', () => { 
         isLeftDown = true;
-        handleTouchMove(pointer);
     });
     leftButton.on('pointerup', () => { 
         isLeftDown = false;
-        isRightDown = false; // Reset right button state when releasing left
     });
     leftButton.on('pointerout', () => { 
         isLeftDown = false;
-        isRightDown = false; // Reset right button state when leaving left
+    });
+    leftButton.on('pointerover', (pointer) => {
+        if (pointer.isDown) isLeftDown = true;
     });
 
-    rightButton.on('pointerdown', (pointer) => { 
+    rightButton.on('pointerdown', () => { 
         isRightDown = true;
-        handleTouchMove(pointer);
     });
     rightButton.on('pointerup', () => { 
         isRightDown = false;
-        isLeftDown = false; // Reset left button state when releasing right
     });
     rightButton.on('pointerout', () => { 
         isRightDown = false;
-        isLeftDown = false; // Reset left button state when leaving right
+    });
+    rightButton.on('pointerover', (pointer) => {
+        if (pointer.isDown) isRightDown = true;
     });
 
-    // Add pointer move event listener to the game
-    this.input.on('pointermove', (pointer) => {
-        if (pointer.isDown) {
-            handleTouchMove(pointer);
-        }
-    });
-
-    function handleTouchMove(pointer) {
-        // Get the touch position
-        const touchX = pointer.x;
-        const touchY = pointer.y;
-        
-        // Define the control area boundaries for both buttons
-        const leftButtonBounds = {
-            left: leftButton.x - leftButton.width/2,
-            right: leftButton.x + leftButton.width/2,
-            top: leftButton.y - leftButton.height/2,
-            bottom: leftButton.y + leftButton.height/2
-        };
-        
-        const rightButtonBounds = {
-            left: rightButton.x - rightButton.width/2,
-            right: rightButton.x + rightButton.width/2,
-            top: rightButton.y - rightButton.height/2,
-            bottom: rightButton.y + rightButton.height/2
-        };
-        
-        // Check if touch is within button boundaries
-        const touchingLeftButton = touchX >= leftButtonBounds.left && 
-                                 touchX <= leftButtonBounds.right && 
-                                 touchY >= leftButtonBounds.top && 
-                                 touchY <= leftButtonBounds.bottom;
-                                 
-        const touchingRightButton = touchX >= rightButtonBounds.left && 
-                                  touchX <= rightButtonBounds.right && 
-                                  touchY >= rightButtonBounds.top && 
-                                  touchY <= rightButtonBounds.bottom;
-        
-        // Update movement states based on touch position
-        isLeftDown = touchingLeftButton;
-        isRightDown = touchingRightButton;
-    }
-
-    // Improved jump button handling
+    // Enable multitouch
+    this.input.addPointer(3);
+    this.input.setGlobalTopOnly(false);
+    
+    // Jump button handling
     jumpButton.on('pointerdown', () => { 
         isJumpDown = true;
-        // Reset wasJumpDown to false when starting a new press
-        wasJumpDown = false;
     });
     jumpButton.on('pointerup', () => { 
         isJumpDown = false;
-        wasJumpDown = false;
     });
     jumpButton.on('pointerout', () => { 
         isJumpDown = false;
-        wasJumpDown = false;
+    });
+    jumpButton.on('pointerover', (pointer) => {
+        if (pointer.isDown) isJumpDown = true;
     });
 }
 
@@ -257,7 +216,7 @@ function update() {
                       currentState !== characterStateMachine.states.falling &&
                       (currentTime - lastJumpTime) >= JUMP_BUFFER;
     
-    const jumpJustPressed = jumpPressed && !wasJumpDown && canJumpNow;
+    const jumpJustPressed = jumpPressed && canJumpNow;
     
     if (jumpJustPressed) {
         lastJumpTime = currentTime;
@@ -268,9 +227,6 @@ function update() {
         right: cursors.right.isDown || isRightDown,
         jump: jumpJustPressed
     };
-    
-    // Update previous jump state
-    wasJumpDown = jumpPressed;
     
     // Update character state machine
     characterStateMachine.update(input);
