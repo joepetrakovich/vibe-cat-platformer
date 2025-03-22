@@ -4,7 +4,7 @@
   "description": "A 2D platformer game made with Phaser.js",
   "main": "index.html",
   "scripts": {
-    "start": "http-server . -p 8080"
+    "start": "http-server . -p 8080 --cors -c-1"
   },
   "dependencies": {
     "phaser": "^3.70.0"
