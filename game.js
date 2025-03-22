@@ -10,7 +10,7 @@ const config = {
         default: 'arcade',
         arcade: {
             gravity: { y: 1200 },
-            debug: true
+            debug: false
         }
     },
     scene: {
@@ -54,6 +54,8 @@ let isRightDown = false;
 let isJumpDown = false;
 let wasJumpDown = false;  // Track previous jump button state
 let canJump = true;       // Track if we can process a new jump
+let lastJumpTime = 0;     // Track the last time we jumped
+const JUMP_BUFFER = 150;  // Buffer time in ms between jumps
 let stateText;
 let groundText;
 
@@ -220,9 +222,20 @@ function create() {
         isRightDown = touchingRightButton;
     }
 
-    jumpButton.on('pointerdown', () => { isJumpDown = true; });
-    jumpButton.on('pointerup', () => { isJumpDown = false; });
-    jumpButton.on('pointerout', () => { isJumpDown = false; });
+    // Improved jump button handling
+    jumpButton.on('pointerdown', () => { 
+        isJumpDown = true;
+        // Reset wasJumpDown to false when starting a new press
+        wasJumpDown = false;
+    });
+    jumpButton.on('pointerup', () => { 
+        isJumpDown = false;
+        wasJumpDown = false;
+    });
+    jumpButton.on('pointerout', () => { 
+        isJumpDown = false;
+        wasJumpDown = false;
+    });
 }
 
 function update() {
@@ -234,13 +247,21 @@ function update() {
     // Track if jump button/key was just pressed this frame
     const jumpPressed = (cursors.up.isDown || cursors.space.isDown || isJumpDown);
     
-    // Only allow jumping if we're on the ground and not already jumping/falling
+    // Get current time
+    const currentTime = this.time.now;
+    
+    // Only allow jumping if we're on the ground, not already jumping/falling, and enough time has passed
     const currentState = characterStateMachine.getCurrentState();
     const canJumpNow = character.isOnGround() && 
                       currentState !== characterStateMachine.states.jumping &&
-                      currentState !== characterStateMachine.states.falling;
+                      currentState !== characterStateMachine.states.falling &&
+                      (currentTime - lastJumpTime) >= JUMP_BUFFER;
     
     const jumpJustPressed = jumpPressed && !wasJumpDown && canJumpNow;
+    
+    if (jumpJustPressed) {
+        lastJumpTime = currentTime;
+    }
     
     const input = {
         left: cursors.left.isDown || isLeftDown,

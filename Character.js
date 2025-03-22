@@ -6,12 +6,13 @@ export class Character {
         // Scale up the sprite
         this.sprite.setScale(3);
         
-        this.sprite.body.setBounce(0.2);
+        // Remove bounce and ensure solid ground contact
+        this.sprite.body.setBounce(0);
         this.sprite.body.setCollideWorldBounds(true);
         
-        // Adjust the physics body size to match the scaled sprite
-        this.sprite.body.setSize(12, 12); // Half the sprite size to make collision feel better
-        this.sprite.body.setOffset(14, 20);
+        // Adjust the physics body size to be a bit larger for better ground detection
+        this.sprite.body.setSize(14, 14); // Slightly larger collision box
+        this.sprite.body.setOffset(13, 18); // Adjusted offset to match visual
         
         this.velocity = {
             x: 0,
