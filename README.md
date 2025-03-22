@@ -1,30 +1,55 @@
-# Platform Climber
+# Phaser Platformer Game
 
-A simple 2D platformer game built with Phaser.js where you need to climb platforms to reach the goal at the top.
+A 2D platformer game made with Phaser.js.
 
-## How to Play
+## Setup and Development
 
-- Use the **LEFT** and **RIGHT** arrow keys to move
-- Press the **UP** arrow key to jump
-- Reach the yellow goal at the top to win!
+### Prerequisites
+- Node.js (v14 or later)
+- npm
 
-## Setup and Running
+### Installation
+1. Clone this repository
+2. Install the dependencies:
+   ```
+   npm install
+   ```
 
-1. Install dependencies:
-```bash
-npm install
+### Development
+To run the development server:
 ```
-
-2. Start the game:
-```bash
 npm start
 ```
+Or using the webpack dev server:
+```
+npm run dev
+```
 
-3. Open your browser and navigate to `http://localhost:8080`
+## Building for Production
+To create a bundled version of the game:
+```
+npm run build
+```
 
-## Game Features
+This will create a `dist` directory with the following files:
+- `index.html`: The HTML file
+- `bundle.js`: The bundled JavaScript file
+- `assets/`: Directory containing all assets
 
-- Simple platformer mechanics with physics
-- Multiple platforms to jump between
-- Goal-based gameplay
-- Win condition with victory message 
+## Running the Production Build
+To run the production build, you can serve the `dist` directory:
+```
+npx http-server ./dist -p 8080
+```
+
+## Cleaning Up
+To remove the `dist` directory:
+```
+npm run clean
+```
+
+## Game Controls
+- Left/Right arrows or on-screen buttons: Move left/right
+- Space or up arrow or on-screen button: Jump
+
+Enjoy the game! 

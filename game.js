@@ -1,3 +1,4 @@
+import Phaser from 'phaser';
 import { World } from './World.js';
 import { Character } from './Character.js';
 import { CharacterStateMachine } from './CharacterStateMachine.js';
