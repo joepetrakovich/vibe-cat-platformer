@@ -66,6 +66,7 @@ function preload() {
     this.load.spritesheet('cat-idle', 'assets/cat01_spritesheets/cat01_idle_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
     this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
     this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
+    this.load.spritesheet('food', 'assets/food3.png?v=' + version, { frameWidth: 32, frameHeight: 32 });
     this.load.audio('boing', 'assets/sounds/Jump2.wav?v=' + version);
     this.load.audio('win', 'assets/sounds/Checkpoint.wav?v=' + version);
 }
@@ -95,6 +96,7 @@ function create() {
     });
     stateText.setScrollFactor(0);
     stateText.setDepth(100);
+    stateText.visible = false;  // Hide state text
     
     // Add debug text for ground state
     groundText = this.add.text(10, 40, 'OnGround: true', {
@@ -105,6 +107,7 @@ function create() {
     });
     groundText.setScrollFactor(0);
     groundText.setDepth(100);
+    groundText.visible = false;  // Hide ground state text
     
     // Set up state change callback
     characterStateMachine.onStateChange = (newState) => {
@@ -112,7 +115,26 @@ function create() {
     };
     
     // Create goal
-    goal = this.add.rectangle(270, 70, 32, 32, 0xffff00);
+    goal = this.add.sprite(290, 70, 'food', 7);
+    
+    // Make the food static (doesn't move when hit)
+    // goal.body.setAllowGravity(false);
+    // goal.body.setImmovable(true);
+    
+    // // Scale the sprite if needed
+    goal.setScale(1.5);
+    
+    // // Add a gentle floating animation
+    this.tweens.add({
+        targets: goal,
+        y: goal.y - 10,
+        duration: 1500,
+        yoyo: true,
+        repeat: -1,
+        ease: 'Sine.easeInOut'
+    });
+
+    //goal = this.add.rectangle(270, 70, 32, 32, 0xffff00);
     this.physics.add.existing(goal, true);
     this.physics.add.overlap(character.sprite, goal, reachGoal, null, this);
     

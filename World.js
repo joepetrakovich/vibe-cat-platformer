@@ -1,3 +1,4 @@
+
 export class World {
     constructor(scene) {
         this.scene = scene;
@@ -27,5 +28,7 @@ export class World {
 
     addCharacterCollider(character) {
         this.scene.physics.add.collider(character.sprite, this.platforms);
+
     }
+
 } 
