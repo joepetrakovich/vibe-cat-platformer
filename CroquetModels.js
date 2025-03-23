@@ -91,11 +91,6 @@ export class GameModel extends Model {
         this.publish(this.id, "game-reset", { players: this.players });
     }
     
-    static types() {
-        return {
-            "GameModel": GameModel
-        };
-    }
 }
 
 // Register the models
