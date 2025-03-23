@@ -60,23 +60,21 @@ let stateText;
 let groundText;
 
 function preload() {
-    // Add version number for cache busting
-    const version = Date.now();
-    
+
     // Load cat spritesheets
-    this.load.spritesheet('cat-idle', 'assets/cat01_spritesheets/cat01_idle_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
-    this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
-    this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png?v=' + version, { frameWidth: 40, frameHeight: 32 });
-    this.load.spritesheet('food', 'assets/food3.png?v=' + version, { frameWidth: 32, frameHeight: 32 });
-    this.load.audio('boing', 'assets/sounds/Jump2.wav?v=' + version);
-    this.load.audio('win', 'assets/sounds/Checkpoint.wav?v=' + version);
+    this.load.spritesheet('cat-idle', 'assets/cat01_spritesheets/cat01_idle_strip8.png', { frameWidth: 40, frameHeight: 32 });
+    this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png', { frameWidth: 40, frameHeight: 32 });
+    this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png', { frameWidth: 40, frameHeight: 32 });
+    this.load.spritesheet('food', 'assets/food3.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.audio('boing', 'assets/sounds/Jump2.mp3');
+    this.load.audio('win', 'assets/sounds/Checkpoint.mp3');
     
     // Load night background assets
-    this.load.image('night-sky', 'assets/night/night sky.png?v=' + version);
-    this.load.image('night-buildings-back', 'assets/night/night buildings back.png?v=' + version);
-    this.load.image('night-buildings-front', 'assets/night/night buildings front.png?v=' + version);
-    this.load.image('night-fence', 'assets/night/night fence.png?v=' + version);
-    this.load.image('night-bush', 'assets/night/night bush.png?v=' + version);
+    this.load.image('night-sky', 'assets/night/night sky.png');
+    this.load.image('night-buildings-back', 'assets/night/night buildings back.png');
+    this.load.image('night-buildings-front', 'assets/night/night buildings front.png');
+    this.load.image('night-fence', 'assets/night/night fence.png');
+    this.load.image('night-bush', 'assets/night/night bush.png');
 }
 
 function create() {
