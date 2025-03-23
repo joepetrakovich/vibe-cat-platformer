@@ -2,12 +2,16 @@ const path = require('path');
 const HtmlWebpackPlugin = require('html-webpack-plugin');
 const CopyWebpackPlugin = require('copy-webpack-plugin');
 const MiniCssExtractPlugin = require('mini-css-extract-plugin');
+const Dotenv = require('dotenv-webpack');
 
 module.exports = {
   mode: 'development',
-  entry: './game.js',
+  entry: {
+    main: './game.js',
+    multiplayer: './multiplayer-game.js'
+  },
   output: {
-    filename: 'bundle.js',
+    filename: '[name].js',
     path: path.resolve(__dirname, 'dist'),
     clean: true,
   },
@@ -33,11 +37,24 @@ module.exports = {
       }
     ]
   },
+  resolve: {
+    fallback: {
+      crypto: false
+    }
+  },
   plugins: [
+    new Dotenv(),
     new HtmlWebpackPlugin({
       template: './index.html',
       filename: 'index.html',
+      chunks: ['main'],
       inject: true
+    }),
+    new HtmlWebpackPlugin({
+      template: './multiplayer-index.html',
+      filename: 'multiplayer.html',
+      chunks: ['multiplayer'],
+      inject: false
     }),
     new MiniCssExtractPlugin({
       filename: 'styles.css'
