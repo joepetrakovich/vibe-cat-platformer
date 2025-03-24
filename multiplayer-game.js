@@ -215,10 +215,17 @@ function create() {
     portalHint.setOrigin(0.5);
     portalHint.setDepth(5);
     
-    // Create start portal animation
+    // Create portal animations
     this.anims.create({
-        key: 'portal-animation',
+        key: 'exit-portal-animation',
         frames: this.anims.generateFrameNumbers('exit-portal', { start: 0, end: 6 }),
+        frameRate: 10,
+        repeat: -1
+    });
+    
+    this.anims.create({
+        key: 'start-portal-animation',
+        frames: this.anims.generateFrameNumbers('start-portal', { start: 0, end: 6 }),
         frameRate: 10,
         repeat: -1
     });
@@ -227,7 +234,7 @@ function create() {
     const portal = this.add.sprite(40, 45, 'exit-portal');
     portal.setScale(0.5);  // Adjusted scale for better size
     portal.setDepth(5);
-    portal.play('portal-animation');
+    portal.play('exit-portal-animation');
     
     // Adjust the physics body to match the visual size
     this.physics.add.existing(portal, true); // Add physics body, set to static
@@ -245,6 +252,55 @@ function create() {
     
     // Add collision detection for portal
     this.physics.add.overlap(localCharacter.sprite, portal, enterPortal, null, this);
+    
+    // Check for ref query parameter
+    const urlParams = new URLSearchParams(window.location.search);
+    const refUrl = urlParams.get('ref');
+    
+    // If ref URL exists, create start portal in bottom left
+    if (refUrl) {
+        // Add a text hint above the start portal
+        const startPortalHint = this.add.text(360, 520, 'RETURN', {
+            fontSize: '12px',
+            fontStyle: 'bold',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3,
+        });
+        startPortalHint.setOrigin(0.5);
+        startPortalHint.setDepth(5);
+        
+        // Create animated start portal sprite in the bottom right
+        const startPortal = this.add.sprite(360, 550, 'start-portal');
+        startPortal.setScale(0.5);
+        startPortal.setDepth(5);
+        startPortal.play('start-portal-animation');
+        
+        // Adjust the physics body with larger detection area
+        this.physics.add.existing(startPortal, true);
+        startPortal.body.setSize(80, 80);
+        startPortal.body.setOffset(24, 24);
+        
+        // Add animation to the start portal hint
+        this.tweens.add({
+            targets: startPortalHint,
+            alpha: 0.6,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // Add collision detection for start portal
+        this.physics.add.overlap(
+            localCharacter.sprite, 
+            startPortal, 
+            function() {
+                enterReturnPortal.call(this, refUrl);
+            }, 
+            null, 
+            this
+        );
+    }
     
     // Add player number label to local character
     const localPlayerLabel = this.add.text(localCharacter.sprite.x, localCharacter.sprite.y - 25, '', {
@@ -753,5 +809,44 @@ function enterPortal() {
     this.time.delayedCall(800, () => {
         // Redirect to portal.pieter.com with ref query parameter (no encoding)
         window.location.href = `https://portal.pieter.com?ref=${currentUrl}`;
+    });
+}
+
+// Function to handle returning through the start portal
+function enterReturnPortal(refUrl) {
+    // Check if we're already processing portal entry
+    if (this.isEnteringPortal) return;
+    this.isEnteringPortal = true;
+    
+    // Play some visual effects
+    this.cameras.main.flash(500, 255, 255, 255);
+    this.cameras.main.shake(500, 0.01);
+    
+    // Play a sound if available
+    if (this.sound.get('win')) {
+        this.sound.play('win', { volume: 0.5 });
+    }
+    
+    // Make the cat and player badge disappear
+    if (localCharacter && localCharacter.sprite) {
+        localCharacter.sprite.body.setVelocity(0, 0);
+        localCharacter.sprite.setVisible(false);
+        
+        // Find and hide the player label
+        const playerLabel = this.children.getAll().find(child => 
+            child.type === 'Text' && 
+            child.text && 
+            child.text.includes('(You)')
+        );
+        
+        if (playerLabel) {
+            playerLabel.setVisible(false);
+        }
+    }
+    
+    // Wait for the effects to complete, then redirect
+    this.time.delayedCall(800, () => {
+        // Redirect to the original URL
+        window.location.href = refUrl;
     });
 } 
