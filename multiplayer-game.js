@@ -729,9 +729,21 @@ function enterPortal() {
         this.sound.play('win', { volume: 0.5 });
     }
     
-    // Pause the character's movement
+    // Make the cat and player badge disappear
     if (localCharacter && localCharacter.sprite) {
         localCharacter.sprite.body.setVelocity(0, 0);
+        localCharacter.sprite.setVisible(false);
+        
+        // Find and hide the player label
+        const playerLabel = this.children.getAll().find(child => 
+            child.type === 'Text' && 
+            child.text && 
+            child.text.includes('(You)')
+        );
+        
+        if (playerLabel) {
+            playerLabel.setVisible(false);
+        }
     }
     
     // Get the current URL
@@ -739,7 +751,7 @@ function enterPortal() {
     
     // Wait for the effects to complete, then redirect
     this.time.delayedCall(800, () => {
-        // Redirect to portal.pieter.com with ref query parameter
-        window.location.href = `https://portal.pieter.com?ref=${encodeURIComponent(currentUrl)}`;
+        // Redirect to portal.pieter.com with ref query parameter (no encoding)
+        window.location.href = `https://portal.pieter.com?ref=${currentUrl}`;
     });
 } 
