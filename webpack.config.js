@@ -5,10 +5,9 @@ const MiniCssExtractPlugin = require('mini-css-extract-plugin');
 const Dotenv = require('dotenv-webpack');
 
 module.exports = {
-  mode: 'development',
+  mode: 'production',
   entry: {
-    main: './game.js',
-    multiplayer: './multiplayer-game.js'
+    main: './multiplayer-game.js'
   },
   output: {
     filename: '[name].js',
@@ -47,12 +46,6 @@ module.exports = {
     new HtmlWebpackPlugin({
       template: './index.html',
       filename: 'index.html',
-      chunks: ['main'],
-      inject: true
-    }),
-    new HtmlWebpackPlugin({
-      template: './multiplayer-index.html',
-      filename: 'multiplayer.html',
       chunks: ['multiplayer'],
       inject: false
     }),

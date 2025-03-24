@@ -1,32 +1,74 @@
 <!DOCTYPE html>
-<html>
+<html lang="en">
 <head>
-    <title>Platform Game</title>
-    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
-    <meta http-equiv="Pragma" content="no-cache">
-    <meta http-equiv="Expires" content="0">
+    <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0, maximum-scale=1.0, user-scalable=no">
+    <title>Multiplayer Cat Platformer</title>
     <style>
         body {
             margin: 0;
             padding: 0;
-            display: flex;
-            justify-content: center;
-            align-items: center;
-            min-height: 100vh;
-            background: #333;
+            background-color: #000;
             overflow: hidden;
+            touch-action: none;
+            -webkit-touch-callout: none;
+            -webkit-user-select: none;
+            -moz-user-select: none;
+            -ms-user-select: none;
+            user-select: none;
         }
+        
         #game {
-            width: 100%;
+            display: block;
+            width: 100vw;
             height: 100vh;
-            max-width: 400px;
-            max-height: 700px;
+            margin: 0 auto;
+        }
+        
+        #share-url {
+            position: fixed;
+            bottom: 10px;
+            left: 10px;
+            padding: 8px 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 1000;
+        }
+        
+        #instructions {
+            position: fixed;
+            top: 10px;
+            right: 10px;
+            padding: 8px 12px;
+            background-color: rgba(0, 0, 0, 0.7);
+            color: white;
+            border-radius: 4px;
+            font-family: Arial, sans-serif;
+            font-size: 14px;
+            z-index: 1000;
         }
     </style>
 </head>
 <body>
     <div id="game"></div>
-    <!-- Webpack will inject the script tag for bundle.js here -->
+    <div id="share-url">Share URL: <button id="copy-url">Copy</button></div>
+    <div id="instructions">Race to the food at the top! First player wins!</div>
+    
+    <script>
+        // Add a script to copy the URL
+        document.getElementById('copy-url').addEventListener('click', function() {
+            const url = window.location.href;
+            navigator.clipboard.writeText(url).then(() => {
+                alert('URL copied to clipboard! Share with friends to play together.');
+            }).catch(err => {
+                console.error('Could not copy URL: ', err);
+            });
+        });
+    </script>
+    
+    <script src="main.js"></script>
 </body>
 </html> 

@@ -53,19 +53,8 @@ let croquetView;
 
 // Generate a random session name or use one from URL
 function getSessionName() {
-    const urlParams = new URLSearchParams(window.location.search);
-    let sessionName = urlParams.get('session');
-    
-    // If no session name in URL, generate a random one
-    if (!sessionName) {
-        sessionName = Math.random().toString(36).substring(2, 15);
-        // Update URL with the session name
-        const url = new URL(window.location);
-        url.searchParams.set('session', sessionName);
-        window.history.pushState({}, '', url);
-    }
-    
-    return sessionName;
+    // Always return the same fixed session name for all users
+    return "global-cat-platformer-session";
 }
 
 // GameView class for Croquet
