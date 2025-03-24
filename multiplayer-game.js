@@ -70,7 +70,6 @@ class GameView extends View {
         this.subscribe(model.id, "player-joined", this.onPlayerJoined);
         this.subscribe(model.id, "player-left", this.onPlayerLeft);
         this.subscribe(model.id, "player-updated", this.onPlayerUpdated);
-        this.subscribe(model.id, "player-entered-portal", this.onPlayerEnteredPortal);
         this.subscribe(model.id, "game-over", this.onGameOver);
         this.subscribe(model.id, "game-reset", this.onGameReset);
         
@@ -100,13 +99,6 @@ class GameView extends View {
         // Called when any player moves
         if (this.gameScene && typeof this.gameScene.updateOtherPlayers === 'function') {
             this.gameScene.updateOtherPlayers(data.players);
-        }
-    }
-    
-    onPlayerEnteredPortal(data) {
-        // Called when any player enters a portal
-        if (this.gameScene && typeof this.gameScene.handlePlayerPortalEntry === 'function') {
-            this.gameScene.handlePlayerPortalEntry(data.playerId);
         }
     }
     
@@ -578,29 +570,6 @@ function create() {
             callbackScope: this,
             repeat: 2
         });
-    };
-
-    this.handlePlayerPortalEntry = function(playerId) {
-        if (otherPlayerSprites[playerId]) {
-            // Make the other player's sprite disappear immediately when they enter a portal
-            otherPlayerSprites[playerId].setVisible(false);
-            
-            // Play a small visual effect at their position
-            const pos = {
-                x: otherPlayerSprites[playerId].x,
-                y: otherPlayerSprites[playerId].y
-            };
-            
-            // Optional: Add a flash effect at their position
-            const flash = this.add.circle(pos.x, pos.y, 30, 0xffffff, 0.7);
-            this.tweens.add({
-                targets: flash,
-                alpha: 0,
-                scale: 2,
-                duration: 500,
-                onComplete: () => flash.destroy()
-            });
-        }
     };
 }
 
