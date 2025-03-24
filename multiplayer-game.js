@@ -898,10 +898,19 @@ function enterPortal() {
     // Get the current URL without query strings
     const currentUrl = window.location.origin + window.location.pathname;
     
+    // Get username from the current URL or from character if available
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get('username') || (localCharacter && localCharacter.username);
+    
     // Wait for the effects to complete, then redirect
     this.time.delayedCall(800, () => {
-        // Redirect to portal.pieter.com with ref query parameter
-        window.location.href = `https://portal.pieter.com?ref=${currentUrl}`;
+        // Build the redirect URL with ref parameter and username if available
+        let redirectUrl = `https://portal.pieter.com?ref=${currentUrl}`;
+        if (username) {
+            redirectUrl += `&username=${encodeURIComponent(username)}`;
+        }
+        // Redirect to portal.pieter.com with parameters
+        window.location.href = redirectUrl;
     });
 }
 
@@ -942,6 +951,10 @@ function enterReturnPortal(refUrl) {
         }
     }
     
+    // Get username from the current URL or from character if available
+    const urlParams = new URLSearchParams(window.location.search);
+    const username = urlParams.get('username') || (localCharacter && localCharacter.username);
+    
     // Ensure refUrl has a protocol
     if (refUrl && !refUrl.startsWith('http://') && !refUrl.startsWith('https://')) {
         refUrl = 'https://' + refUrl;
@@ -951,6 +964,14 @@ function enterReturnPortal(refUrl) {
     
     // Wait for the effects to complete, then redirect
     this.time.delayedCall(800, () => {
+        // Append username parameter if it exists
+        if (username) {
+            // Check if the refUrl already has query parameters
+            const hasQueryParams = refUrl.includes('?');
+            const separator = hasQueryParams ? '&' : '?';
+            refUrl += `${separator}username=${encodeURIComponent(username)}`;
+        }
+        
         // Redirect to the original URL with proper protocol
         window.location.href = refUrl;
     });
