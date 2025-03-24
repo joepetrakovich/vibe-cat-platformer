@@ -8,24 +8,24 @@ export class Character {
         scene.physics.add.existing(this.sprite);
         
         // Scale up the sprite
-        this.sprite.setScale(3);
+        this.sprite.setScale(2);
         
         // Remove bounce and ensure solid ground contact
         this.sprite.body.setBounce(0);
         this.sprite.body.setCollideWorldBounds(true);
         
         // Adjust the physics body size to be narrower and taller for more precise ground detection
-        this.sprite.body.setSize(12, 16); // Narrower and taller collision box
-        this.sprite.body.setOffset(14, 16); // Adjusted offset to match visual better
+        this.sprite.body.setSize(10, 14); // Narrower and taller collision box
+        this.sprite.body.setOffset(15, 16); // Adjusted offset to match visual better
         
         this.velocity = {
             x: 0,
             y: 0
         };
         
-        this.moveSpeed = 160;
-        this.jumpForce = 1500;
-        this.maxFallSpeed = 600;  // Maximum falling speed
+        this.moveSpeed = 150;
+        this.jumpForce = 1200;
+        this.maxFallSpeed = 500;  // Maximum falling speed
         
         // Set the maximum vertical velocity
         this.sprite.body.setMaxVelocityY(this.maxFallSpeed);

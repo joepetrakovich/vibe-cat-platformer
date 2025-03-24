@@ -13,7 +13,7 @@ const config = {
     physics: {
         default: 'arcade',
         arcade: {
-            gravity: { y: 1200 },
+            gravity: { y: 1000 },
             debug: false
         }
     },
@@ -40,8 +40,8 @@ const config = {
 };
 
 // Game area constants
-const GAME_HEIGHT = 620;
-const CONTROLS_HEIGHT = 80;
+const GAME_HEIGHT = 650;
+const CONTROLS_HEIGHT = 50;
 
 // Croquet application name and API key
 const APP_NAME = "io.croquet.catplatformracer";
@@ -407,7 +407,7 @@ function create() {
     }
     
     // Add a text hint above the portal
-    const portalHint = this.add.text(40, 15, 'PORTAL', {
+    const portalHint = this.add.text(40, 10, 'PORTAL', {
         fontSize: '12px',
         fontStyle: 'bold',
         fill: '#ffffff',
@@ -418,15 +418,15 @@ function create() {
     portalHint.setDepth(5);
     
     // Create animated portal sprite in the top left corner
-    const portal = this.add.sprite(40, 45, 'exit-portal');
-    portal.setScale(0.5);  // Adjusted scale for better size
+    const portal = this.add.sprite(40, 30, 'exit-portal');
+    portal.setScale(0.4);  // Adjusted scale for better size
     portal.setDepth(5);
     portal.play('exit-portal-animation');
     
     // Adjust the physics body to match the visual size
     this.physics.add.existing(portal, true); // Add physics body, set to static
-    portal.body.setSize(30, 30); // Smaller collision box
-    portal.body.setOffset(49, 49); // Center the smaller collision box in the sprite
+    portal.body.setSize(25, 25); // Smaller collision box
+    portal.body.setOffset(52, 52); // Center the smaller collision box in the sprite
     
     // Add animation to the text hint
     this.tweens.add({
@@ -466,7 +466,7 @@ function create() {
     characterStateMachine = new CharacterStateMachine(localCharacter, world);
     
     // Create goal
-    goal = this.add.sprite(290, 70, 'food', 7);
+    goal = this.add.sprite(290, 25, 'food', 7);
     goal.setScale(1.5); // Make the pizza bigger
     this.physics.add.existing(goal, true);
     this.physics.add.overlap(localCharacter.sprite, goal, reachGoal, null, this);
