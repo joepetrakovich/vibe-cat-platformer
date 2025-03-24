@@ -281,10 +281,12 @@ function create() {
             repeat: -1
         });
         
-        // If player is entering through portal, set starting position to be the return portal
+        // If player is entering through portal, set starting position to be near the return portal
+        // but not directly on top of it to prevent immediate re-entry
         if (isPortalEntry) {
-            startX = 360;
-            startY = 550;
+            // Position the player to the left of the portal instead of directly on it
+            startX = 280; // Move to the left of the portal (was 360)
+            startY = 550; // Keep the same Y position
         }
         
         // We'll add collision detection later after the character is created
@@ -303,7 +305,8 @@ function create() {
     
     // Now add collision detection for start portal if it exists
     if (this.startPortal) {
-        this.physics.add.overlap(
+        // Create the overlap detection but store the reference
+        const portalOverlap = this.physics.add.overlap(
             localCharacter.sprite, 
             this.startPortal, 
             function() {
@@ -312,6 +315,17 @@ function create() {
             null, 
             this
         );
+        
+        // If player entered through portal, temporarily disable the collision to prevent immediate re-entry
+        if (isPortalEntry) {
+            // Disable the overlap initially
+            portalOverlap.active = false;
+            
+            // Re-enable it after a delay
+            this.time.delayedCall(1500, () => {
+                portalOverlap.active = true;
+            });
+        }
     }
     
     // If entering through portal, play entrance animation
