@@ -180,6 +180,12 @@ let playerInfoText;
 let winText;
 let isGameOver = false;
 
+// Inactivity tracking
+let lastMoveTime = 0;
+const INACTIVITY_TIMEOUT = 60000; // 60 seconds (1 minute) in milliseconds
+let inactivityTimer = null;
+let inactivityWarningText = null;
+
 // Controls
 let leftButton;
 let rightButton;
@@ -463,6 +469,18 @@ function create() {
     // Register this scene with Croquet view
     croquetView.registerGameScene(this);
     
+    // Initialize inactivity tracking
+    lastMoveTime = this.time.now; // Set initial move time to current time
+    
+    // Create a timer that checks for inactivity every second
+    inactivityTimer = this.time.addEvent({
+        delay: 1000,
+        callback: checkInactivity,
+        args: [this],
+        callbackScope: this,
+        loop: true
+    });
+    
     // Add functions for multiplayer
     this.updateOtherPlayers = function(players) {
         const localPlayerId = croquetView.localPlayerId;
@@ -511,6 +529,12 @@ function create() {
         const message = isLocalWinner ? 'You Win!' : `Player ${winnerNumber} Wins!`;
         winText.setText(message);
         winText.visible = true;
+        
+        // Remove inactivity warning if it exists
+        if (inactivityWarningText) {
+            inactivityWarningText.destroy();
+            inactivityWarningText = null;
+        }
     };
     
     this.resetGame = function(players) {
@@ -648,6 +672,9 @@ function update() {
         jump: jumpJustPressed
     };
     
+    // Check if player is trying to move
+    const isMoving = input.left || input.right || input.jump;
+    
     // Update character state machine
     characterStateMachine.update(input);
     
@@ -655,6 +682,14 @@ function update() {
     const stateName = Object.keys(characterStateMachine.states).find(
         state => characterStateMachine.states[state] === characterStateMachine.currentState
     );
+    
+    // Check if player has actually moved or jumped
+    if (isMoving || 
+        Math.abs(localCharacter.sprite.body.velocity.x) > 10 || 
+        Math.abs(localCharacter.sprite.body.velocity.y) > 10) {
+        // Reset the inactivity timer if the player is moving
+        lastMoveTime = currentTime;
+    }
     
     // Update character position on the model
     croquetView.updatePlayerPosition(
@@ -989,4 +1024,78 @@ function enterReturnPortal(refUrl) {
         // Redirect to the original URL with proper protocol
         window.location.href = refUrl;
     });
+}
+
+// Function to handle inactivity check
+function checkInactivity(scene) {
+    // Don't check for inactivity if the game is over
+    if (isGameOver) return;
+    
+    const currentTime = scene.time.now;
+    
+    // If player hasn't moved for 10 seconds
+    if (currentTime - lastMoveTime > INACTIVITY_TIMEOUT) {
+        // Player has been inactive too long, redirect them out
+        console.log("Player inactive for too long, exiting");
+        
+        // Play some effects
+        scene.cameras.main.flash(500, 255, 0, 0); // Red flash
+        scene.cameras.main.shake(500, 0.02);
+        
+        // Show a message
+        if (!inactivityWarningText) {
+            inactivityWarningText = scene.add.text(200, 300, 'INACTIVE - LOGGING OUT', {
+                fontSize: '20px',
+                fontStyle: 'bold',
+                fill: '#ffffff',
+                stroke: '#ff0000',
+                strokeThickness: 6,
+                backgroundColor: '#000000',
+                padding: { x: 15, y: 10 }
+            });
+            inactivityWarningText.setOrigin(0.5);
+            inactivityWarningText.setScrollFactor(0);
+            inactivityWarningText.setDepth(100);
+        }
+        
+        // Wait a moment, then exit to a default destination
+        scene.time.delayedCall(1500, () => {
+            window.location.href = 'https://portal.pieter.com';
+        });
+        
+        // Clear the timer so it doesn't fire again
+        if (inactivityTimer) {
+            scene.time.removeEvent(inactivityTimer);
+            inactivityTimer = null;
+        }
+    } else if (currentTime - lastMoveTime > INACTIVITY_TIMEOUT - 3000) {
+        // Warning when 3 seconds from timeout
+        if (!inactivityWarningText) {
+            inactivityWarningText = scene.add.text(200, 300, 'MOVE TO STAY ACTIVE!', {
+                fontSize: '20px',
+                fontStyle: 'bold',
+                fill: '#ffffff',
+                stroke: '#ff0000',
+                strokeThickness: 6,
+                backgroundColor: '#000000',
+                padding: { x: 15, y: 10 }
+            });
+            inactivityWarningText.setOrigin(0.5);
+            inactivityWarningText.setScrollFactor(0);
+            inactivityWarningText.setDepth(100);
+            
+            // Make it blink
+            scene.tweens.add({
+                targets: inactivityWarningText,
+                alpha: 0.3,
+                duration: 500,
+                yoyo: true,
+                repeat: -1
+            });
+        }
+    } else if (inactivityWarningText) {
+        // If player moved, remove the warning
+        inactivityWarningText.destroy();
+        inactivityWarningText = null;
+    }
 } 
