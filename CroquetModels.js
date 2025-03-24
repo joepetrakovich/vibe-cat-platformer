@@ -12,6 +12,7 @@ export class GameModel extends Model {
         this.subscribe(this.sessionId, "view-exit", this.onViewExit);
         this.subscribe(this.id, "player-moved", this.onPlayerMoved);
         this.subscribe(this.id, "goal-reached", this.onGoalReached);
+        this.subscribe(this.id, "set-username", this.onSetUsername);
     }
     
     onViewJoin(viewId) {
@@ -28,7 +29,8 @@ export class GameModel extends Model {
             state: "idle",
             flipX: false,
             score: 0,
-            playerNumber: playerCount + 1
+            playerNumber: playerCount + 1,
+            username: null
         };
         
         this.publish(this.id, "player-joined", { playerId: viewId, players: this.players });
@@ -50,6 +52,14 @@ export class GameModel extends Model {
             this.players[playerId].state = state;
             this.players[playerId].flipX = flipX;
             
+            this.publish(this.id, "player-updated", { playerId, players: this.players });
+        }
+    }
+    
+    onSetUsername(data) {
+        const { playerId, username } = data;
+        if (this.players[playerId]) {
+            this.players[playerId].username = username;
             this.publish(this.id, "player-updated", { playerId, players: this.players });
         }
     }

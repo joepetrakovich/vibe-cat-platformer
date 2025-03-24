@@ -66,6 +66,10 @@ class GameView extends View {
         // Store local player ID
         this.localPlayerId = this.viewId;
         
+        // Check for username in URL params
+        const urlParams = new URLSearchParams(window.location.search);
+        this.username = urlParams.get('username');
+        
         // Set up event listeners for model updates
         this.subscribe(model.id, "player-joined", this.onPlayerJoined);
         this.subscribe(model.id, "player-left", this.onPlayerLeft);
@@ -78,6 +82,16 @@ class GameView extends View {
             // Initialize Phaser after Croquet session is established
             game = new Phaser.Game(config);
         }, 0);
+        
+        // Send username to model if it exists
+        if (this.username) {
+            setTimeout(() => {
+                this.publish(model.id, "set-username", {
+                    playerId: this.localPlayerId,
+                    username: this.username
+                });
+            }, 100); // Small delay to ensure model is ready
+        }
     }
     
     // Event handlers for Croquet model updates
@@ -128,6 +142,14 @@ class GameView extends View {
         setTimeout(() => {
             this.updatePlayersDisplay();
         }, 100);
+        
+        // Send the username to the Croquet model if it exists
+        if (this.username) {
+            this.publish(this.model.id, "set-username", { 
+                playerId: this.localPlayerId,
+                username: this.username
+            });
+        }
     }
     
     // Update player position on the model
@@ -219,6 +241,7 @@ function create() {
     const urlParams = new URLSearchParams(window.location.search);
     const refUrl = urlParams.get('ref');
     const portalParam = urlParams.get('portal');
+    const username = urlParams.get('username'); // Add username parameter
     const isPortalEntry = portalParam === 'true';
     
     // Determine starting position
@@ -274,6 +297,9 @@ function create() {
     // Create local player character
     localCharacter = new Character(this, startX, startY);
     world.addCharacterCollider(localCharacter);
+    
+    // Store the username in the character for later use
+    localCharacter.username = username;
     
     // Now add collision detection for start portal if it exists
     if (this.startPortal) {
@@ -446,7 +472,11 @@ function create() {
             
             // Update local player label with correct player number
             if (isLocal && localPlayerLabel) {
-                localPlayerLabel.setText(`P${player.playerNumber} (You)`);
+                // Use username if it exists, otherwise just "(You)"
+                const displayName = localCharacter.username ? 
+                    `${localCharacter.username} (You)` : 
+                    `(You)`;
+                localPlayerLabel.setText(displayName);
                 localPlayerLabel.visible = true;
             }
         });
@@ -646,7 +676,8 @@ function updateOtherPlayerSprite(scene, player) {
         container.sprite = sprite;
         
         // Create a player number label and add to container
-        const label = scene.add.text(0, -25, `P${player.playerNumber}`, {
+        const displayName = player.username ? player.username : `P${player.playerNumber}`;
+        const label = scene.add.text(0, -25, displayName, {
             fontSize: '16px',
             fontStyle: 'bold',
             fill: '#ffffff',
@@ -665,6 +696,14 @@ function updateOtherPlayerSprite(scene, player) {
     
     // Update sprite flip
     container.sprite.flipX = player.flipX;
+    
+    // Update label text if username changed
+    if (container.label) {
+        const displayName = player.username ? player.username : `P${player.playerNumber}`;
+        if (container.label.text !== displayName) {
+            container.label.setText(displayName);
+        }
+    }
     
     // Update animation based on state
     const currentAnim = container.sprite.anims.currentAnim ? container.sprite.anims.currentAnim.key : null;
