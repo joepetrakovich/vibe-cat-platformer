@@ -178,6 +178,10 @@ function preload() {
     this.load.audio('boing', 'assets/sounds/Jump2.mp3');
     this.load.audio('win', 'assets/sounds/Checkpoint.mp3');
     
+    // Load portal sprite sheets
+    this.load.spritesheet('start-portal', 'assets/start-portal.png', { frameWidth: 128, frameHeight: 128 });
+    this.load.spritesheet('exit-portal', 'assets/exit-portal.png', { frameWidth: 128, frameHeight: 128 });
+    
     // Load night background assets
     this.load.image('night-sky', 'assets/night/night sky.png');
     this.load.image('night-buildings-back', 'assets/night/night buildings back.png');
@@ -199,6 +203,48 @@ function create() {
     // Create local player character
     localCharacter = new Character(this, 100, 500);
     world.addCharacterCollider(localCharacter);
+    
+    // Add a text hint above the portal
+    const portalHint = this.add.text(40, 15, 'PORTAL', {
+        fontSize: '12px',
+        fontStyle: 'bold',
+        fill: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+    });
+    portalHint.setOrigin(0.5);
+    portalHint.setDepth(5);
+    
+    // Create start portal animation
+    this.anims.create({
+        key: 'portal-animation',
+        frames: this.anims.generateFrameNumbers('exit-portal', { start: 0, end: 6 }),
+        frameRate: 10,
+        repeat: -1
+    });
+    
+    // Create animated portal sprite in the top left corner
+    const portal = this.add.sprite(40, 45, 'exit-portal');
+    portal.setScale(0.5);  // Adjusted scale for better size
+    portal.setDepth(5);
+    portal.play('portal-animation');
+    
+    // Adjust the physics body to match the visual size
+    this.physics.add.existing(portal, true); // Add physics body, set to static
+    portal.body.setSize(30, 30); // Smaller collision box
+    portal.body.setOffset(49, 49); // Center the smaller collision box in the sprite
+    
+    // Add animation to the text hint
+    this.tweens.add({
+        targets: portalHint,
+        alpha: 0.6,
+        duration: 1000,
+        yoyo: true,
+        repeat: -1
+    });
+    
+    // Add collision detection for portal
+    this.physics.add.overlap(localCharacter.sprite, portal, enterPortal, null, this);
     
     // Add player number label to local character
     const localPlayerLabel = this.add.text(localCharacter.sprite.x, localCharacter.sprite.y - 25, '', {
@@ -241,11 +287,15 @@ function create() {
     });
     
     // Add text for player information
-    playerInfoText = this.add.text(10, 10, '', {
-        fontSize: '14px',
-        fill: '#fff',
-        backgroundColor: '#000',
-        padding: { x: 5, y: 3 }
+    playerInfoText = this.add.text(0, 0, '', {
+        fontSize: '16px',
+        fontStyle: 'bold',
+        fill: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 3,
+        backgroundColor: 'rgba(0, 0, 0, 0.5)',
+        padding: { x: 8, y: 5 },
+        align: 'center'
     });
     playerInfoText.setScrollFactor(0);
     playerInfoText.setDepth(100);
@@ -281,14 +331,13 @@ function create() {
     };
     
     this.updatePlayersInfo = function(players, localPlayerId) {
-        // Count actual players
-        const playerCount = Object.keys(players).length;
+        // Skip updating player info text - effectively hiding it
         
-        // Format the player information
-        let infoText = `Players: ${playerCount}\n`;
-        Object.values(players).forEach(player => {
+        // Only update the local player label
+        const sortedPlayers = Object.values(players).sort((a, b) => a.playerNumber - b.playerNumber);
+        
+        sortedPlayers.forEach((player) => {
             const isLocal = player.id === localPlayerId;
-            infoText += `Player ${player.playerNumber}${isLocal ? ' (You)' : ''}: ${player.score}\n`;
             
             // Update local player label with correct player number
             if (isLocal && localPlayerLabel) {
@@ -297,11 +346,8 @@ function create() {
             }
         });
         
-        playerInfoText.setText(infoText);
-        
-        // Ensure text is properly positioned and visible
-        playerInfoText.setX(10);
-        playerInfoText.setY(10);
+        // Hide the player info text
+        playerInfoText.visible = false;
     };
     
     this.removePlayerSprite = function(playerId) {
@@ -666,4 +712,34 @@ function startCroquetSession() {
 }
 
 // Start the Croquet session when the document is ready
-document.addEventListener('DOMContentLoaded', startCroquetSession); 
+document.addEventListener('DOMContentLoaded', startCroquetSession);
+
+// Function to handle portal entry
+function enterPortal() {
+    // Check if we're already processing portal entry
+    if (this.isEnteringPortal) return;
+    this.isEnteringPortal = true;
+    
+    // Play some visual effects
+    this.cameras.main.flash(500, 255, 255, 255);
+    this.cameras.main.shake(500, 0.01);
+    
+    // Play a sound if available
+    if (this.sound.get('win')) {
+        this.sound.play('win', { volume: 0.5 });
+    }
+    
+    // Pause the character's movement
+    if (localCharacter && localCharacter.sprite) {
+        localCharacter.sprite.body.setVelocity(0, 0);
+    }
+    
+    // Get the current URL
+    const currentUrl = window.location.href;
+    
+    // Wait for the effects to complete, then redirect
+    this.time.delayedCall(800, () => {
+        // Redirect to portal.pieter.com with ref query parameter
+        window.location.href = `https://portal.pieter.com?ref=${encodeURIComponent(currentUrl)}`;
+    });
+} 
