@@ -70,6 +70,7 @@ class GameView extends View {
         this.subscribe(model.id, "player-joined", this.onPlayerJoined);
         this.subscribe(model.id, "player-left", this.onPlayerLeft);
         this.subscribe(model.id, "player-updated", this.onPlayerUpdated);
+        this.subscribe(model.id, "player-entered-portal", this.onPlayerEnteredPortal);
         this.subscribe(model.id, "game-over", this.onGameOver);
         this.subscribe(model.id, "game-reset", this.onGameReset);
         
@@ -99,6 +100,13 @@ class GameView extends View {
         // Called when any player moves
         if (this.gameScene && typeof this.gameScene.updateOtherPlayers === 'function') {
             this.gameScene.updateOtherPlayers(data.players);
+        }
+    }
+    
+    onPlayerEnteredPortal(data) {
+        // Called when any player enters a portal
+        if (this.gameScene && typeof this.gameScene.handlePlayerPortalEntry === 'function') {
+            this.gameScene.handlePlayerPortalEntry(data.playerId);
         }
     }
     
@@ -199,6 +207,21 @@ function create() {
     
     // Set up the background
     setupBackground(this);
+    
+    // Create portal animations
+    this.anims.create({
+        key: 'exit-portal-animation',
+        frames: this.anims.generateFrameNumbers('exit-portal', { start: 0, end: 6 }),
+        frameRate: 10,
+        repeat: -1
+    });
+    
+    this.anims.create({
+        key: 'start-portal-animation',
+        frames: this.anims.generateFrameNumbers('start-portal', { start: 0, end: 6 }),
+        frameRate: 10,
+        repeat: -1
+    });
     
     // Check for query parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -312,21 +335,6 @@ function create() {
     portalHint.setOrigin(0.5);
     portalHint.setDepth(5);
     
-    // Create portal animations
-    this.anims.create({
-        key: 'exit-portal-animation',
-        frames: this.anims.generateFrameNumbers('exit-portal', { start: 0, end: 6 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    
-    this.anims.create({
-        key: 'start-portal-animation',
-        frames: this.anims.generateFrameNumbers('start-portal', { start: 0, end: 6 }),
-        frameRate: 10,
-        repeat: -1
-    });
-    
     // Create animated portal sprite in the top left corner
     const portal = this.add.sprite(40, 45, 'exit-portal');
     portal.setScale(0.5);  // Adjusted scale for better size
@@ -377,6 +385,7 @@ function create() {
     
     // Create goal
     goal = this.add.sprite(290, 70, 'food', 7);
+    goal.setScale(1.5); // Make the pizza bigger
     this.physics.add.existing(goal, true);
     this.physics.add.overlap(localCharacter.sprite, goal, reachGoal, null, this);
     
@@ -569,6 +578,29 @@ function create() {
             callbackScope: this,
             repeat: 2
         });
+    };
+
+    this.handlePlayerPortalEntry = function(playerId) {
+        if (otherPlayerSprites[playerId]) {
+            // Make the other player's sprite disappear immediately when they enter a portal
+            otherPlayerSprites[playerId].setVisible(false);
+            
+            // Play a small visual effect at their position
+            const pos = {
+                x: otherPlayerSprites[playerId].x,
+                y: otherPlayerSprites[playerId].y
+            };
+            
+            // Optional: Add a flash effect at their position
+            const flash = this.add.circle(pos.x, pos.y, 30, 0xffffff, 0.7);
+            this.tweens.add({
+                targets: flash,
+                alpha: 0,
+                scale: 2,
+                duration: 500,
+                onComplete: () => flash.destroy()
+            });
+        }
     };
 }
 
@@ -824,6 +856,11 @@ function enterPortal() {
     if (this.isEnteringPortal) return;
     this.isEnteringPortal = true;
     
+    // Notify other players that this player entered a portal
+    croquetView.publish(croquetView.model.id, "player-entered-portal", {
+        playerId: croquetView.localPlayerId
+    });
+    
     // Play some visual effects
     this.cameras.main.flash(500, 255, 255, 255);
     this.cameras.main.shake(500, 0.01);
@@ -865,6 +902,11 @@ function enterReturnPortal(refUrl) {
     // Check if we're already processing portal entry
     if (this.isEnteringPortal) return;
     this.isEnteringPortal = true;
+    
+    // Notify other players that this player entered a portal
+    croquetView.publish(croquetView.model.id, "player-entered-portal", {
+        playerId: croquetView.localPlayerId
+    });
     
     // Play some visual effects
     this.cameras.main.flash(500, 255, 255, 255);
