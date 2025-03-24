@@ -200,9 +200,106 @@ function create() {
     // Set up the background
     setupBackground(this);
     
+    // Check for query parameters
+    const urlParams = new URLSearchParams(window.location.search);
+    const refUrl = urlParams.get('ref');
+    const portalParam = urlParams.get('portal');
+    const isPortalEntry = portalParam === 'true';
+    
+    // Determine starting position
+    let startX = 100;
+    let startY = 500;
+    
+    // If ref URL exists, create start portal in bottom right
+    if (refUrl) {
+        // Add a text hint above the start portal
+        const startPortalHint = this.add.text(360, 520, 'RETURN', {
+            fontSize: '12px',
+            fontStyle: 'bold',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 3,
+        });
+        startPortalHint.setOrigin(0.5);
+        startPortalHint.setDepth(5);
+        
+        // Create animated start portal sprite in the bottom right
+        const startPortal = this.add.sprite(360, 550, 'start-portal');
+        startPortal.setScale(0.5);
+        startPortal.setDepth(5);
+        startPortal.play('start-portal-animation');
+        
+        // Adjust the physics body with larger detection area
+        this.physics.add.existing(startPortal, true);
+        startPortal.body.setSize(80, 80);
+        startPortal.body.setOffset(24, 24);
+        
+        // Add animation to the start portal hint
+        this.tweens.add({
+            targets: startPortalHint,
+            alpha: 0.6,
+            duration: 1000,
+            yoyo: true,
+            repeat: -1
+        });
+        
+        // If player is entering through portal, set starting position to be the return portal
+        if (isPortalEntry) {
+            startX = 360;
+            startY = 550;
+        }
+        
+        // We'll add collision detection later after the character is created
+        
+        // Store portal reference for later use
+        this.startPortal = startPortal;
+        this.returnUrl = refUrl;
+    }
+    
     // Create local player character
-    localCharacter = new Character(this, 100, 500);
+    localCharacter = new Character(this, startX, startY);
     world.addCharacterCollider(localCharacter);
+    
+    // Now add collision detection for start portal if it exists
+    if (this.startPortal) {
+        this.physics.add.overlap(
+            localCharacter.sprite, 
+            this.startPortal, 
+            function() {
+                enterReturnPortal.call(this, this.returnUrl);
+            }, 
+            null, 
+            this
+        );
+    }
+    
+    // If entering through portal, play entrance animation
+    if (isPortalEntry) {
+        // Initially hide the player
+        localCharacter.sprite.setAlpha(0);
+        
+        // Flash the screen
+        this.cameras.main.flash(500, 255, 255, 255);
+        this.cameras.main.shake(500, 0.02);
+        
+        // Play sound
+        if (this.sound.get('win')) {
+            this.sound.play('win', { volume: 0.5 });
+        }
+        
+        // Animate the player appearing
+        this.tweens.add({
+            targets: localCharacter.sprite,
+            alpha: 1,
+            y: startY - 50,
+            duration: 500,
+            ease: 'Bounce.Out',
+            onComplete: () => {
+                // Apply a gentle bounce physics effect
+                localCharacter.sprite.body.setVelocity(0, -300);
+            }
+        });
+    }
     
     // Add a text hint above the portal
     const portalHint = this.add.text(40, 15, 'PORTAL', {
@@ -252,55 +349,6 @@ function create() {
     
     // Add collision detection for portal
     this.physics.add.overlap(localCharacter.sprite, portal, enterPortal, null, this);
-    
-    // Check for ref query parameter
-    const urlParams = new URLSearchParams(window.location.search);
-    const refUrl = urlParams.get('ref');
-    
-    // If ref URL exists, create start portal in bottom left
-    if (refUrl) {
-        // Add a text hint above the start portal
-        const startPortalHint = this.add.text(360, 520, 'RETURN', {
-            fontSize: '12px',
-            fontStyle: 'bold',
-            fill: '#ffffff',
-            stroke: '#000000',
-            strokeThickness: 3,
-        });
-        startPortalHint.setOrigin(0.5);
-        startPortalHint.setDepth(5);
-        
-        // Create animated start portal sprite in the bottom right
-        const startPortal = this.add.sprite(360, 550, 'start-portal');
-        startPortal.setScale(0.5);
-        startPortal.setDepth(5);
-        startPortal.play('start-portal-animation');
-        
-        // Adjust the physics body with larger detection area
-        this.physics.add.existing(startPortal, true);
-        startPortal.body.setSize(80, 80);
-        startPortal.body.setOffset(24, 24);
-        
-        // Add animation to the start portal hint
-        this.tweens.add({
-            targets: startPortalHint,
-            alpha: 0.6,
-            duration: 1000,
-            yoyo: true,
-            repeat: -1
-        });
-        
-        // Add collision detection for start portal
-        this.physics.add.overlap(
-            localCharacter.sprite, 
-            startPortal, 
-            function() {
-                enterReturnPortal.call(this, refUrl);
-            }, 
-            null, 
-            this
-        );
-    }
     
     // Add player number label to local character
     const localPlayerLabel = this.add.text(localCharacter.sprite.x, localCharacter.sprite.y - 25, '', {
@@ -802,12 +850,12 @@ function enterPortal() {
         }
     }
     
-    // Get the current URL
-    const currentUrl = window.location.href;
+    // Get the current URL without query strings
+    const currentUrl = window.location.origin + window.location.pathname;
     
     // Wait for the effects to complete, then redirect
     this.time.delayedCall(800, () => {
-        // Redirect to portal.pieter.com with ref query parameter (no encoding)
+        // Redirect to portal.pieter.com with ref query parameter
         window.location.href = `https://portal.pieter.com?ref=${currentUrl}`;
     });
 }
@@ -844,9 +892,16 @@ function enterReturnPortal(refUrl) {
         }
     }
     
+    // Ensure refUrl has a protocol
+    if (refUrl && !refUrl.startsWith('http://') && !refUrl.startsWith('https://')) {
+        refUrl = 'https://' + refUrl;
+    }
+    
+    console.log("Redirecting to:", refUrl);
+    
     // Wait for the effects to complete, then redirect
     this.time.delayedCall(800, () => {
-        // Redirect to the original URL
+        // Redirect to the original URL with proper protocol
         window.location.href = refUrl;
     });
 } 
