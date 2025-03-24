@@ -168,6 +168,16 @@ class GameView extends View {
     notifyGoalReached(playerId) {
         this.publish(this.model.id, "goal-reached", { playerId });
     }
+
+    // Assign a random cat type to this player
+    assignRandomCatType() {
+        const catType = Math.floor(Math.random() * 5) + 1; // Random number between 1-5
+        this.publish(this.model.id, "set-cat-type", { 
+            playerId: this.localPlayerId,
+            catType: catType
+        });
+        return catType;
+    }
 }
 
 // Game variables
@@ -198,10 +208,14 @@ let lastJumpTime = 0;
 const JUMP_BUFFER = 150;
 
 function preload() {
-    // Load cat spritesheets
-    this.load.spritesheet('cat-idle', 'assets/cat01_spritesheets/cat01_idle_strip8.png', { frameWidth: 40, frameHeight: 32 });
-    this.load.spritesheet('cat-walk', 'assets/cat01_spritesheets/cat01_walk_strip8.png', { frameWidth: 40, frameHeight: 32 });
-    this.load.spritesheet('cat-jump', 'assets/cat01_spritesheets/cat01_jump_strip4.png', { frameWidth: 40, frameHeight: 32 });
+    // Load all cat variants spritesheets
+    for (let catNum = 1; catNum <= 5; catNum++) {
+        const catId = catNum.toString().padStart(2, '0'); // Format as "01", "02", etc.
+        this.load.spritesheet(`cat${catId}-idle`, `assets/cat${catId}_spritesheets/cat${catId}_idle_strip8.png`, { frameWidth: 40, frameHeight: 32 });
+        this.load.spritesheet(`cat${catId}-walk`, `assets/cat${catId}_spritesheets/cat${catId}_walk_strip8.png`, { frameWidth: 40, frameHeight: 32 });
+        this.load.spritesheet(`cat${catId}-jump`, `assets/cat${catId}_spritesheets/cat${catId}_jump_strip4.png`, { frameWidth: 40, frameHeight: 32 });
+    }
+    
     this.load.spritesheet('food', 'assets/food3.png', { frameWidth: 32, frameHeight: 32 });
     this.load.audio('boing', 'assets/sounds/Jump2.mp3');
     this.load.audio('win', 'assets/sounds/Checkpoint.mp3');
@@ -227,6 +241,32 @@ function create() {
     
     // Set up the background
     setupBackground(this);
+    
+    // Create animations for all cat variants
+    for (let catNum = 1; catNum <= 5; catNum++) {
+        const catId = catNum.toString().padStart(2, '0'); // Format as "01", "02", etc.
+        
+        this.anims.create({
+            key: `cat${catId}-idle`,
+            frames: this.anims.generateFrameNumbers(`cat${catId}-idle`, { start: 0, end: 7 }),
+            frameRate: 6,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: `cat${catId}-walk`,
+            frames: this.anims.generateFrameNumbers(`cat${catId}-walk`, { start: 0, end: 7 }),
+            frameRate: 8,
+            repeat: -1
+        });
+
+        this.anims.create({
+            key: `cat${catId}-jump`,
+            frames: this.anims.generateFrameNumbers(`cat${catId}-jump`, { start: 0, end: 3 }),
+            frameRate: 8,
+            repeat: 0
+        });
+    }
     
     // Create portal animations
     this.anims.create({
@@ -302,8 +342,12 @@ function create() {
         this.returnUrl = refUrl;
     }
     
-    // Create local player character
-    localCharacter = new Character(this, startX, startY);
+    // Assign a random cat type for this player
+    const catType = croquetView.assignRandomCatType();
+    const catId = catType.toString().padStart(2, '0');
+    
+    // Create local player character with assigned cat type
+    localCharacter = new Character(this, startX, startY, catId);
     world.addCharacterCollider(localCharacter);
     
     // Store the username in the character for later use
@@ -712,14 +756,18 @@ function reachGoal() {
 function updateOtherPlayerSprite(scene, player) {
     let container = otherPlayerSprites[player.id];
     
+    // Get cat type from player data
+    const catType = player.catType || 1; // Default to cat01 if not set
+    const catId = catType.toString().padStart(2, '0');
+    
     // Create sprite container if it doesn't exist
     if (!container) {
         // Create a container at the player position
         container = scene.add.container(player.x, player.y);
         otherPlayerSprites[player.id] = container;
         
-        // Create sprite and add to container
-        const sprite = scene.add.sprite(0, 0, 'cat-idle');
+        // Create sprite and add to container using the player's cat type
+        const sprite = scene.add.sprite(0, 0, `cat${catId}-idle`);
         sprite.setScale(3);
         container.add(sprite);
         container.sprite = sprite;
@@ -737,6 +785,9 @@ function updateOtherPlayerSprite(scene, player) {
         label.setOrigin(0.5);
         container.add(label);
         container.label = label;
+        
+        // Store the cat type with the container
+        container.catType = catType;
     }
     
     // Update container position
@@ -754,15 +805,15 @@ function updateOtherPlayerSprite(scene, player) {
         }
     }
     
-    // Update animation based on state
+    // Update animation based on state using the player's cat type
     const currentAnim = container.sprite.anims.currentAnim ? container.sprite.anims.currentAnim.key : null;
     
-    if (player.state === 'idle' && currentAnim !== 'idle') {
-        container.sprite.play('idle');
-    } else if (player.state === 'walking' && currentAnim !== 'walk') {
-        container.sprite.play('walk');
-    } else if (player.state === 'jumping' && currentAnim !== 'jump') {
-        container.sprite.play('jump');
+    if (player.state === 'idle' && currentAnim !== `cat${catId}-idle`) {
+        container.sprite.play(`cat${catId}-idle`);
+    } else if (player.state === 'walking' && currentAnim !== `cat${catId}-walk`) {
+        container.sprite.play(`cat${catId}-walk`);
+    } else if (player.state === 'jumping' && currentAnim !== `cat${catId}-jump`) {
+        container.sprite.play(`cat${catId}-jump`);
     }
 }
 

@@ -1,6 +1,10 @@
 export class Character {
-    constructor(scene, x, y) {
-        this.sprite = scene.add.sprite(x, y, 'cat-idle');
+    constructor(scene, x, y, catId = "01") {
+        // Store the cat ID for reference
+        this.catId = catId;
+        
+        // Use the specific cat sprite
+        this.sprite = scene.add.sprite(x, y, `cat${catId}-idle`);
         scene.physics.add.existing(this.sprite);
         
         // Scale up the sprite
@@ -48,8 +52,8 @@ export class Character {
             repeat: 0
         });
 
-        // Start with idle animation
-        this.sprite.play('idle');
+        // Start with idle animation for the specific cat
+        this.sprite.play(`cat${catId}-idle`);
     }
 
     setVelocity(x, y) {

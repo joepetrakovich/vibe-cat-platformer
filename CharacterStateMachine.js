@@ -47,7 +47,7 @@ class CharacterState {
 class IdleState extends CharacterState {
     enter() {
         this.character.setVelocity(0, 0);
-        this.character.sprite.play('idle');
+        this.character.sprite.play(`cat${this.character.catId}-idle`);
     }
 
     update(input) {
@@ -63,7 +63,7 @@ class IdleState extends CharacterState {
 
 class WalkingState extends CharacterState {
     enter() {
-        this.character.sprite.play('walk');
+        this.character.sprite.play(`cat${this.character.catId}-walk`);
     }
 
     update(input) {
@@ -89,7 +89,7 @@ class JumpingState extends CharacterState {
         // Only apply jump force if we're actually on the ground
         if (this.character.isOnGround()) {
             this.character.setVelocity(this.character.velocity.x, -this.character.jumpForce);
-            this.character.sprite.play('jump');
+            this.character.sprite.play(`cat${this.character.catId}-jump`);
             // Play the jump sound effect at half volume
             this.character.sprite.scene.sound.play('boing', { volume: 0.25 });
         }
@@ -124,7 +124,8 @@ class JumpingState extends CharacterState {
 
 class FallingState extends CharacterState {
     enter() {
-        this.character.sprite.play('fall');
+        // Use jump animation for falling as well, but could create a separate falling animation
+        this.character.sprite.play(`cat${this.character.catId}-jump`);
     }
 
     update(input) {

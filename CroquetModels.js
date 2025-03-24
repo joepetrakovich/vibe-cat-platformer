@@ -13,6 +13,7 @@ export class GameModel extends Model {
         this.subscribe(this.id, "player-moved", this.onPlayerMoved);
         this.subscribe(this.id, "goal-reached", this.onGoalReached);
         this.subscribe(this.id, "set-username", this.onSetUsername);
+        this.subscribe(this.id, "set-cat-type", this.onSetCatType);
     }
     
     onViewJoin(viewId) {
@@ -30,7 +31,8 @@ export class GameModel extends Model {
             flipX: false,
             score: 0,
             playerNumber: playerCount + 1,
-            username: null
+            username: null,
+            catType: 1 // Default cat type is 1 (cat01)
         };
         
         this.publish(this.id, "player-joined", { playerId: viewId, players: this.players });
@@ -60,6 +62,14 @@ export class GameModel extends Model {
         const { playerId, username } = data;
         if (this.players[playerId]) {
             this.players[playerId].username = username;
+            this.publish(this.id, "player-updated", { playerId, players: this.players });
+        }
+    }
+    
+    onSetCatType(data) {
+        const { playerId, catType } = data;
+        if (this.players[playerId]) {
+            this.players[playerId].catType = catType;
             this.publish(this.id, "player-updated", { playerId, players: this.players });
         }
     }
@@ -96,6 +106,7 @@ export class GameModel extends Model {
             this.players[playerId].y = 500;
             this.players[playerId].velocity = { x: 0, y: 0 };
             this.players[playerId].state = "idle";
+            // Don't reset player catType, keep it consistent
         });
         
         this.publish(this.id, "game-reset", { players: this.players });
