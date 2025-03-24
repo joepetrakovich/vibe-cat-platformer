@@ -466,7 +466,7 @@ function create() {
     characterStateMachine = new CharacterStateMachine(localCharacter, world);
     
     // Create goal
-    goal = this.add.sprite(290, 25, 'food', 7);
+    goal = this.add.sprite(295, 50, 'food', 7);
     goal.setScale(1.5); // Make the pizza bigger
     this.physics.add.existing(goal, true);
     this.physics.add.overlap(localCharacter.sprite, goal, reachGoal, null, this);
