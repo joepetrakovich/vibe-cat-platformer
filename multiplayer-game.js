@@ -200,6 +200,28 @@ function create() {
     localCharacter = new Character(this, 100, 500);
     world.addCharacterCollider(localCharacter);
     
+    // Add player number label to local character
+    const localPlayerLabel = this.add.text(localCharacter.sprite.x, localCharacter.sprite.y - 25, '', {
+        fontSize: '16px',
+        fontStyle: 'bold',
+        fill: '#ffffff',
+        stroke: '#000000',
+        strokeThickness: 4,
+        padding: { x: 4, y: 2 }
+    });
+    localPlayerLabel.setOrigin(0.5);
+    localPlayerLabel.setDepth(20);
+    localPlayerLabel.visible = false; // Hide initially until we know the player number
+
+    // Update the local player label text and position in the game loop
+    this.events.on('update', function() {
+        if (localCharacter && localCharacter.sprite) {
+            // Update position only
+            localPlayerLabel.x = localCharacter.sprite.x;
+            localPlayerLabel.y = localCharacter.sprite.y - 25;
+        }
+    });
+
     // Create state machine for the local character
     characterStateMachine = new CharacterStateMachine(localCharacter, world);
     
@@ -259,12 +281,27 @@ function create() {
     };
     
     this.updatePlayersInfo = function(players, localPlayerId) {
-        let infoText = 'Players:\n';
+        // Count actual players
+        const playerCount = Object.keys(players).length;
+        
+        // Format the player information
+        let infoText = `Players: ${playerCount}\n`;
         Object.values(players).forEach(player => {
             const isLocal = player.id === localPlayerId;
             infoText += `Player ${player.playerNumber}${isLocal ? ' (You)' : ''}: ${player.score}\n`;
+            
+            // Update local player label with correct player number
+            if (isLocal && localPlayerLabel) {
+                localPlayerLabel.setText(`P${player.playerNumber} (You)`);
+                localPlayerLabel.visible = true;
+            }
         });
+        
         playerInfoText.setText(infoText);
+        
+        // Ensure text is properly positioned and visible
+        playerInfoText.setX(10);
+        playerInfoText.setY(10);
     };
     
     this.removePlayerSprite = function(playerId) {
@@ -283,25 +320,104 @@ function create() {
     
     this.resetGame = function(players) {
         isGameOver = false;
+        
+        // Start the countdown before actual gameplay begins
+        this.startCountdown(3, () => {
+            // Only reset positions after countdown completes
+            
+            // Reset local character position
+            const localPlayer = players[croquetView.localPlayerId];
+            if (localPlayer) {
+                localCharacter.sprite.x = localPlayer.x;
+                localCharacter.sprite.y = localPlayer.y;
+                localCharacter.setVelocity(0, 0);
+                characterStateMachine.transition('idle');
+            }
+            
+            // Update player info
+            this.updatePlayersInfo(players, croquetView.localPlayerId);
+            
+            // Reset other player sprites
+            Object.values(players).forEach(player => {
+                if (player.id !== croquetView.localPlayerId) {
+                    updateOtherPlayerSprite(scene, player);
+                }
+            });
+        });
+    };
+
+    // Add countdown function
+    this.startCountdown = function(seconds, callback) {
+        isGameOver = true; // Prevent movement during countdown
+        
+        // Hide the win text immediately when countdown starts
         winText.visible = false;
         
-        // Reset local character position
-        const localPlayer = players[croquetView.localPlayerId];
-        if (localPlayer) {
-            localCharacter.sprite.x = localPlayer.x;
-            localCharacter.sprite.y = localPlayer.y;
-            localCharacter.setVelocity(0, 0);
-            characterStateMachine.transition('idle');
-        }
+        // Create countdown text
+        const countdownText = this.add.text(200, 300, `${seconds}`, {
+            fontSize: '64px',
+            fontStyle: 'bold',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 6,
+            padding: { x: 20, y: 10 }
+        });
+        countdownText.setOrigin(0.5);
+        countdownText.setScrollFactor(0);
+        countdownText.setDepth(110);
         
-        // Update player info
-        this.updatePlayersInfo(players, croquetView.localPlayerId);
+        // Play countdown sound
+        this.sound.play('boing', { volume: 0.2 });
         
-        // Reset other player sprites
-        Object.values(players).forEach(player => {
-            if (player.id !== croquetView.localPlayerId) {
-                updateOtherPlayerSprite(scene, player);
-            }
+        // Scale animation for the text
+        this.tweens.add({
+            targets: countdownText,
+            scale: { from: 1.5, to: 1 },
+            duration: 800,
+            ease: 'Bounce'
+        });
+        
+        // Create the countdown timer
+        const countdownTimer = this.time.addEvent({
+            delay: 1000,
+            callback: () => {
+                seconds--;
+                if (seconds > 0) {
+                    // Update text
+                    countdownText.setText(`${seconds}`);
+                    // Play sound
+                    this.sound.play('boing', { volume: 0.2 });
+                    // New scale animation
+                    this.tweens.add({
+                        targets: countdownText,
+                        scale: { from: 1.5, to: 1 },
+                        duration: 800,
+                        ease: 'Bounce'
+                    });
+                } else {
+                    // Show GO! message
+                    countdownText.setText('GO!');
+                    this.sound.play('win', { volume: 0.4 });
+                    
+                    // Scale and fade animation for GO!
+                    this.tweens.add({
+                        targets: countdownText,
+                        scale: { from: 1, to: 2 },
+                        alpha: { from: 1, to: 0 },
+                        duration: 800,
+                        ease: 'Power2',
+                        onComplete: () => {
+                            countdownText.destroy();
+                            isGameOver = false; // Re-enable movement
+                            if (callback) callback();
+                        }
+                    });
+                    
+                    countdownTimer.destroy();
+                }
+            },
+            callbackScope: this,
+            repeat: 2
         });
     };
 }
@@ -364,45 +480,50 @@ function reachGoal() {
 }
 
 function updateOtherPlayerSprite(scene, player) {
-    let sprite = otherPlayerSprites[player.id];
+    let container = otherPlayerSprites[player.id];
     
-    // Create sprite if it doesn't exist
-    if (!sprite) {
-        sprite = scene.add.sprite(player.x, player.y, 'cat-idle');
-        sprite.setScale(3);
-        otherPlayerSprites[player.id] = sprite;
+    // Create sprite container if it doesn't exist
+    if (!container) {
+        // Create a container at the player position
+        container = scene.add.container(player.x, player.y);
+        otherPlayerSprites[player.id] = container;
         
-        // Create a player number label
-        const label = scene.add.text(0, -20, `P${player.playerNumber}`, {
-            fontSize: '14px',
-            fill: '#fff',
-            backgroundColor: '#000',
-            padding: { x: 3, y: 2 }
+        // Create sprite and add to container
+        const sprite = scene.add.sprite(0, 0, 'cat-idle');
+        sprite.setScale(3);
+        container.add(sprite);
+        container.sprite = sprite;
+        
+        // Create a player number label and add to container
+        const label = scene.add.text(0, -25, `P${player.playerNumber}`, {
+            fontSize: '16px',
+            fontStyle: 'bold',
+            fill: '#ffffff',
+            stroke: '#000000',
+            strokeThickness: 4,
+            padding: { x: 4, y: 2 }
         });
         label.setOrigin(0.5);
-        sprite.label = label;
+        container.add(label);
+        container.label = label;
     }
     
-    // Update sprite position and animation
-    sprite.x = player.x;
-    sprite.y = player.y;
-    sprite.flipX = player.flipX;
+    // Update container position
+    container.x = player.x;
+    container.y = player.y;
     
-    // Update label position
-    if (sprite.label) {
-        sprite.label.x = player.x;
-        sprite.label.y = player.y - 30;
-    }
+    // Update sprite flip
+    container.sprite.flipX = player.flipX;
     
     // Update animation based on state
-    const currentAnim = sprite.anims.currentAnim ? sprite.anims.currentAnim.key : null;
+    const currentAnim = container.sprite.anims.currentAnim ? container.sprite.anims.currentAnim.key : null;
     
     if (player.state === 'idle' && currentAnim !== 'idle') {
-        sprite.play('idle');
+        container.sprite.play('idle');
     } else if (player.state === 'walking' && currentAnim !== 'walk') {
-        sprite.play('walk');
+        container.sprite.play('walk');
     } else if (player.state === 'jumping' && currentAnim !== 'jump') {
-        sprite.play('jump');
+        container.sprite.play('jump');
     }
 }
 

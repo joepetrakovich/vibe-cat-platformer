@@ -70,8 +70,8 @@ export class GameModel extends Model {
                 winnerNumber: this.players[playerId].playerNumber 
             });
             
-            // Reset the game after 3 seconds
-            this.future(3000).resetGame();
+            // Reset the game after 1.5 seconds (shortened from 3 seconds)
+            this.future(1500).resetGame();
         }
     }
     

@@ -54,20 +54,7 @@
 </head>
 <body>
     <div id="game"></div>
-    <div id="share-url">Share URL: <button id="copy-url">Copy</button></div>
     <div id="instructions">Race to the food at the top! First player wins!</div>
-    
-    <script>
-        // Add a script to copy the URL
-        document.getElementById('copy-url').addEventListener('click', function() {
-            const url = window.location.href;
-            navigator.clipboard.writeText(url).then(() => {
-                alert('URL copied to clipboard! Share with friends to play together.');
-            }).catch(err => {
-                console.error('Could not copy URL: ', err);
-            });
-        });
-    </script>
     
     <script src="main.js"></script>
 </body>
