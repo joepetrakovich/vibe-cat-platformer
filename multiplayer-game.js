@@ -699,14 +699,15 @@ function create() {
                         ease: 'Bounce'
                     });
                 } else {
-                    // Show GO! message
-                    countdownText.setText('GO!');
+                    // Show "GET THE PIZZA!" message
+                    countdownText.setFontSize('48px');
+                    countdownText.setText('GET PIZZA!');
                     this.sound.play('win', { volume: 0.4 });
                     
-                    // Scale and fade animation for GO!
+                    // Scale and fade animation for final message
                     this.tweens.add({
                         targets: countdownText,
-                        scale: { from: 1, to: 2 },
+                        scale: { from: 1, to: 1.5 },
                         alpha: { from: 1, to: 0 },
                         duration: 800,
                         ease: 'Power2',
@@ -1161,7 +1162,7 @@ function checkInactivity(scene) {
     } else if (currentTime - lastMoveTime > INACTIVITY_TIMEOUT - 3000) {
         // Warning when 3 seconds from timeout
         if (!inactivityWarningText) {
-            inactivityWarningText = scene.add.text(200, 300, 'MOVE TO STAY ACTIVE!', {
+            inactivityWarningText = scene.add.text(200, 300, 'MOVE OR GET BOOTED!', {
                 fontSize: '20px',
                 fontStyle: 'bold',
                 fill: '#ffffff',
