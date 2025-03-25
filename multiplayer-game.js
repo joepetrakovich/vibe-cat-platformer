@@ -584,28 +584,29 @@ function create() {
     this.resetGame = function(players) {
         isGameOver = false;
         
-        // Start the countdown before actual gameplay begins
-        this.startCountdown(3, () => {
-            // Only reset positions after countdown completes
-            
-            // Reset local character position
-            const localPlayer = players[croquetView.localPlayerId];
-            if (localPlayer) {
-                localCharacter.sprite.x = localPlayer.x;
-                localCharacter.sprite.y = localPlayer.y;
-                localCharacter.setVelocity(0, 0);
-                characterStateMachine.transition('idle');
+        // Reset local character position immediately
+        const localPlayer = players[croquetView.localPlayerId];
+        if (localPlayer) {
+            localCharacter.sprite.x = localPlayer.x;
+            localCharacter.sprite.y = localPlayer.y;
+            localCharacter.setVelocity(0, 0);
+            characterStateMachine.transition('idle');
+        }
+        
+        // Reset other player sprites immediately
+        Object.values(players).forEach(player => {
+            if (player.id !== croquetView.localPlayerId) {
+                updateOtherPlayerSprite(scene, player);
             }
-            
-            // Update player info
-            this.updatePlayersInfo(players, croquetView.localPlayerId);
-            
-            // Reset other player sprites
-            Object.values(players).forEach(player => {
-                if (player.id !== croquetView.localPlayerId) {
-                    updateOtherPlayerSprite(scene, player);
-                }
-            });
+        });
+        
+        // Update player info
+        this.updatePlayersInfo(players, croquetView.localPlayerId);
+        
+        // Start the countdown
+        this.startCountdown(3, () => {
+            // Re-enable movement after countdown
+            isGameOver = false;
         });
     };
 
@@ -671,7 +672,6 @@ function create() {
                         ease: 'Power2',
                         onComplete: () => {
                             countdownText.destroy();
-                            isGameOver = false; // Re-enable movement
                             if (callback) callback();
                         }
                     });
@@ -760,7 +760,6 @@ function updateOtherPlayerSprite(scene, player) {
     const catType = player.catType || 1; // Default to cat01 if not set
     const catId = catType.toString().padStart(2, '0');
     
-    // Create sprite container if it doesn't exist
     if (!container) {
         // Create a container at the player position
         container = scene.add.container(player.x, player.y);
@@ -768,7 +767,7 @@ function updateOtherPlayerSprite(scene, player) {
         
         // Create sprite and add to container using the player's cat type
         const sprite = scene.add.sprite(0, 0, `cat${catId}-idle`);
-        sprite.setScale(3);
+        sprite.setScale(2);  // Changed from 3 to 2 to match local player scale
         container.add(sprite);
         container.sprite = sprite;
         
