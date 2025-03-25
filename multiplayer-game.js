@@ -76,10 +76,13 @@ class GameView extends View {
         this.subscribe(model.id, "player-updated", this.onPlayerUpdated);
         this.subscribe(model.id, "game-over", this.onGameOver);
         this.subscribe(model.id, "game-reset", this.onGameReset);
+        this.subscribe(model.id, "platforms-updated", this.onPlatformsUpdated);
+        
+        // Queue for pending platform updates
+        this.pendingPlatformUpdates = [];
         
         // Initialize Phaser in the next frame to ensure Croquet is ready
         setTimeout(() => {
-            // Initialize Phaser after Croquet session is established
             game = new Phaser.Game(config);
         }, 0);
         
@@ -90,7 +93,7 @@ class GameView extends View {
                     playerId: this.localPlayerId,
                     username: this.username
                 });
-            }, 100); // Small delay to ensure model is ready
+            }, 100);
         }
     }
     
@@ -129,6 +132,19 @@ class GameView extends View {
         }
     }
     
+    onPlatformsUpdated(data) {
+        console.log('Received platform update:', data);
+        
+        // If game scene and world aren't ready, queue the update
+        if (!this.gameScene || !this.gameScene.world) {
+            console.log('Queueing platform update for later');
+            this.pendingPlatformUpdates.push(data);
+            return;
+        }
+        
+        this.gameScene.world.updateMovingPlatforms(data.platforms);
+    }
+    
     updatePlayersDisplay() {
         if (this.gameScene && typeof this.gameScene.updatePlayersInfo === 'function') {
             this.gameScene.updatePlayersInfo(this.model.players, this.localPlayerId);
@@ -137,10 +153,31 @@ class GameView extends View {
     
     // Register the game scene for callbacks
     registerGameScene(scene) {
+        console.log('Registering game scene');
         this.gameScene = scene;
+        
         // Only update the display after the scene has set up its methods
         setTimeout(() => {
             this.updatePlayersDisplay();
+            
+            // Process any pending platform updates
+            if (this.pendingPlatformUpdates.length > 0) {
+                console.log('Processing pending platform updates');
+                this.pendingPlatformUpdates.forEach(data => {
+                    if (this.gameScene.world) {
+                        this.gameScene.world.updateMovingPlatforms(data.platforms);
+                    }
+                });
+                this.pendingPlatformUpdates = [];
+            }
+            
+            // Request initial platform state
+            if (this.model.movingPlatforms.length > 0) {
+                console.log('Initializing platforms from model state');
+                if (this.gameScene.world) {
+                    this.gameScene.world.updateMovingPlatforms(this.model.movingPlatforms);
+                }
+            }
         }, 100);
         
         // Send the username to the Croquet model if it exists
@@ -236,11 +273,17 @@ function create() {
     // Save a reference to the scene
     const scene = this;
     
-    // Create world
+    // Create world first
     world = new World(this);
     
     // Set up the background
     setupBackground(this);
+    
+    // Register this scene with Croquet view immediately after world creation
+    croquetView.registerGameScene(this);
+    
+    // Store world reference in the scene for easy access
+    this.world = world;
     
     // Create animations for all cat variants
     for (let catNum = 1; catNum <= 5; catNum++) {
@@ -504,14 +547,11 @@ function create() {
     });
     winText.setOrigin(0.5);
     winText.setScrollFactor(0);
-    winText.setDepth(100);
+     winText.setDepth(100);
     winText.visible = false;
     
     // Create mobile controls
     setupControls(this);
-    
-    // Register this scene with Croquet view
-    croquetView.registerGameScene(this);
     
     // Initialize inactivity tracking
     lastMoveTime = this.time.now; // Set initial move time to current time

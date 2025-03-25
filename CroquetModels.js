@@ -8,12 +8,22 @@ export class GameModel extends Model {
         this.gameOver = false;
         this.winner = null;
         
+        // Add moving platform state
+        this.movingPlatforms = [];
+        this.lastPlatformUpdate = this.now();
+        
         this.subscribe(this.sessionId, "view-join", this.onViewJoin);
         this.subscribe(this.sessionId, "view-exit", this.onViewExit);
         this.subscribe(this.id, "player-moved", this.onPlayerMoved);
         this.subscribe(this.id, "goal-reached", this.onGoalReached);
         this.subscribe(this.id, "set-username", this.onSetUsername);
         this.subscribe(this.id, "set-cat-type", this.onSetCatType);
+        
+        // Initialize moving platforms
+        this.resetMovingPlatforms();
+        
+        // Start platform movement updates
+        this.future(50).updatePlatforms();
     }
     
     onViewJoin(viewId) {
@@ -95,8 +105,91 @@ export class GameModel extends Model {
         }
     }
     
+    // Add platform management methods
+    updatePlatforms() {
+        const now = this.now();
+        const dt = now - this.lastPlatformUpdate;
+        
+        // Update each platform's position
+        this.movingPlatforms.forEach(platform => {
+            // Move platform back and forth
+            const oldX = platform.x;
+            platform.x += platform.speed * dt;
+            
+            // Check bounds and reverse direction
+            if (platform.x >= platform.startX + platform.distance) {
+                platform.x = platform.startX + platform.distance;
+                platform.speed = -Math.abs(platform.speed);
+                console.log(`Platform ${platform.index} hit right bound, reversing direction`);
+            } else if (platform.x <= platform.startX - platform.distance) {
+                platform.x = platform.startX - platform.distance;
+                platform.speed = Math.abs(platform.speed);
+                console.log(`Platform ${platform.index} hit left bound, reversing direction`);
+            }
+            
+            if (Math.abs(oldX - platform.x) > 0.01) {
+                console.log(`Platform ${platform.index} moved from ${oldX.toFixed(2)} to ${platform.x.toFixed(2)}`);
+            }
+        });
+        
+        this.lastPlatformUpdate = now;
+        
+        // Publish updated positions to all views
+        if (this.movingPlatforms.length > 0) {
+            this.publish(this.id, "platforms-updated", { platforms: this.movingPlatforms });
+        }
+        
+        // Schedule next update
+        this.future(16).updatePlatforms();
+    }
+
+    resetMovingPlatforms() {
+        // Define platform positions (same as in World.js)
+        const platformPositions = [
+            { x: 300, y: 500 },
+            { x: 100, y: 450 },
+            { x: 325, y: 400 },
+            { x: 75, y: 350 },
+            { x: 50, y: 300 },
+            { x: 280, y: 300 },
+            { x: 380, y: 250 },
+            { x: 50, y: 200 },
+            { x: 380, y: 200 },
+            { x: 75, y: 150 },
+            { x: 280, y: 100 },
+            { x: 30, y: 80 }
+        ];
+
+        // Randomly select two platforms to move
+        const selectedIndices = [];
+        while (selectedIndices.length < 2) {
+            const index = Math.floor(Math.random() * platformPositions.length);
+            if (!selectedIndices.includes(index)) {
+                selectedIndices.push(index);
+            }
+        }
+
+        // Clear previous moving platforms
+        this.movingPlatforms = [];
+
+        // Set up new moving platforms
+        selectedIndices.forEach(index => {
+            const platform = platformPositions[index];
+            this.movingPlatforms.push({
+                index: index,
+                startX: platform.x,
+                x: platform.x,
+                y: platform.y,
+                speed: 0.05, // Reduced from 0.3 to 0.05 units per millisecond
+                distance: 100 // Maximum distance to move in each direction
+            });
+        });
+
+        // Publish initial platform state
+        this.publish(this.id, "platforms-updated", { platforms: this.movingPlatforms });
+    }
+
     resetGame() {
-        // Reset game state but keep players' scores
         this.gameOver = false;
         this.winner = null;
         
@@ -106,12 +199,13 @@ export class GameModel extends Model {
             this.players[playerId].y = 500;
             this.players[playerId].velocity = { x: 0, y: 0 };
             this.players[playerId].state = "idle";
-            // Don't reset player catType, keep it consistent
         });
+        
+        // Reset and randomize moving platforms
+        this.resetMovingPlatforms();
         
         this.publish(this.id, "game-reset", { players: this.players });
     }
-    
 }
 
 // Register the models
