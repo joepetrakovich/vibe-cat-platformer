@@ -547,7 +547,7 @@ function create() {
     });
     winText.setOrigin(0.5);
     winText.setScrollFactor(0);
-     winText.setDepth(100);
+    winText.setDepth(100);
     winText.visible = false;
     
     // Create mobile controls
@@ -774,6 +774,11 @@ function update() {
         Math.abs(localCharacter.sprite.body.velocity.y) > 10) {
         // Reset the inactivity timer if the player is moving
         lastMoveTime = currentTime;
+    }
+    
+    // Update platform positions smoothly
+    if (world) {
+        world.updatePlatformPositions();
     }
     
     // Update character position on the model

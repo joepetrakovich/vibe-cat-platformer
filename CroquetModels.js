@@ -120,16 +120,14 @@ export class GameModel extends Model {
             if (platform.x >= platform.startX + platform.distance) {
                 platform.x = platform.startX + platform.distance;
                 platform.speed = -Math.abs(platform.speed);
-                console.log(`Platform ${platform.index} hit right bound, reversing direction`);
             } else if (platform.x <= platform.startX - platform.distance) {
                 platform.x = platform.startX - platform.distance;
                 platform.speed = Math.abs(platform.speed);
-                console.log(`Platform ${platform.index} hit left bound, reversing direction`);
             }
             
-            if (Math.abs(oldX - platform.x) > 0.01) {
-                console.log(`Platform ${platform.index} moved from ${oldX.toFixed(2)} to ${platform.x.toFixed(2)}`);
-            }
+            // Add interpolation data
+            platform.targetX = platform.x;
+            platform.lastUpdate = now;
         });
         
         this.lastPlatformUpdate = now;
@@ -139,8 +137,8 @@ export class GameModel extends Model {
             this.publish(this.id, "platforms-updated", { platforms: this.movingPlatforms });
         }
         
-        // Schedule next update
-        this.future(16).updatePlatforms();
+        // Schedule next update (every 50ms instead of 16ms)
+        this.future(50).updatePlatforms();
     }
 
     resetMovingPlatforms() {

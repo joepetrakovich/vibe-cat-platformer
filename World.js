@@ -79,8 +79,6 @@ export class World {
             return;
         }
         
-        console.log('Updating moving platforms:', platformsData);
-        
         // Clear existing moving platforms
         this.movingPlatforms.clear(true, true);
         
@@ -121,8 +119,35 @@ export class World {
             // Store the platform data for reference
             movingPlatform.platformData = platformData;
             
-            // Debug output
-            console.log(`Moving platform ${platformData.index} at (${platformData.x.toFixed(2)}, ${platformData.y}), speed: ${platformData.speed}`);
+            // Store previous position for interpolation
+            movingPlatform.prevX = platformData.x;
+            movingPlatform.targetX = platformData.targetX || platformData.x;
+            movingPlatform.lastUpdate = platformData.lastUpdate || this.scene.time.now;
         });
+    }
+
+    // Add a new method to update platform positions smoothly
+    updatePlatformPositions() {
+        const now = this.scene.time.now;
+        
+        this.movingPlatforms.getChildren().forEach(movingPlatform => {
+            if (!movingPlatform.platformData) return;
+            
+            const platformData = movingPlatform.platformData;
+            const timeSinceUpdate = now - platformData.lastUpdate;
+            
+            // Interpolate position if we have target data
+            if (platformData.targetX !== undefined) {
+                const lerpFactor = Math.min(timeSinceUpdate / 50, 1); // Smooth over 50ms
+                const newX = this.lerp(movingPlatform.prevX, platformData.targetX, lerpFactor);
+                movingPlatform.x = newX;
+                movingPlatform.prevX = newX;
+            }
+        });
+    }
+
+    // Helper function for linear interpolation
+    lerp(start, end, t) {
+        return start * (1 - t) + end * t;
     }
 } 
