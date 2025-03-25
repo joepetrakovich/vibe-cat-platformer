@@ -253,6 +253,12 @@ function preload() {
         this.load.spritesheet(`cat${catId}-jump`, `assets/cat${catId}_spritesheets/cat${catId}_jump_strip4.png`, { frameWidth: 40, frameHeight: 32 });
     }
     
+    // Load rainbow cat sprite sheets
+    const rainbowColors = ['white', 'red', 'orange', 'yellow', 'green', 'teal', 'blue', 'purple', 'pink'];
+    rainbowColors.forEach(color => {
+        this.load.spritesheet(`cat-${color}-jump`, `assets/cat_rainbow/cat_jump_${color}_strip4.png`, { frameWidth: 40, frameHeight: 32 });
+    });
+    
     this.load.spritesheet('food', 'assets/food3.png', { frameWidth: 32, frameHeight: 32 });
     this.load.audio('boing', 'assets/sounds/Jump2.mp3');
     this.load.audio('win', 'assets/sounds/Checkpoint.mp3');
@@ -780,6 +786,11 @@ function update() {
     if (world) {
         world.updatePlatformPositions();
     }
+
+    // Update rainbow trail effect
+    if (localCharacter) {
+        localCharacter.updateTrail();
+    }
     
     // Update character position on the model
     croquetView.updatePlayerPosition(
@@ -1164,8 +1175,8 @@ function checkInactivity(scene) {
             scene.time.removeEvent(inactivityTimer);
             inactivityTimer = null;
         }
-    } else if (currentTime - lastMoveTime > INACTIVITY_TIMEOUT - 3000) {
-        // Warning when 3 seconds from timeout
+    } else if (currentTime - lastMoveTime > INACTIVITY_TIMEOUT - 10000) {
+        // Warning when 10 seconds from timeout
         if (!inactivityWarningText) {
             inactivityWarningText = scene.add.text(200, 300, 'MOVE OR GET BOOTED!', {
                 fontSize: '20px',
