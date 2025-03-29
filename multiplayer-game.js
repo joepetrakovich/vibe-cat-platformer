@@ -340,20 +340,23 @@ function create() {
     this.anims.create({
         key: 'star-spin',
         frames: this.anims.generateFrameNumbers('star', { start: 0, end: 11 }),
-        frameRate: 12,
+        frameRate: 8,
         repeat: -1
     });
     
     // Create bouncing star
-    const star = this.add.sprite(200, 50, 'star');
+    const star = this.add.sprite(50, 50, 'star');
     star.setScale(2); // Make the star bigger
     star.play('star-spin');
     
     // Add physics to the star
     this.physics.add.existing(star);
-    star.body.setBounce(0.8); // Make it bouncy
+    star.body.setBounce(1); // Perfect bounce (no energy loss)
     star.body.setCollideWorldBounds(true); // Keep it within the game bounds
-    star.body.setVelocity(0, 200); // Give it initial downward velocity
+    star.body.setVelocity(150, 200); // Give it diagonal velocity (right and down)
+    star.body.setDamping(false); // Disable damping to maintain momentum
+    star.body.setAngularDrag(0); // Disable angular drag to maintain spin
+    star.body.setMass(1); // Set mass to 1 for consistent physics
     
     // Add collision with platforms
     this.physics.add.collider(star, world.platforms);
