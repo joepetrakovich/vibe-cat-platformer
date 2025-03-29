@@ -266,6 +266,7 @@ function preload() {
     this.load.audio('countdown', 'assets/sounds/countdown.wav');
     this.load.audio('start', 'assets/sounds/start.wav');
     this.load.audio('background-music', 'assets/sounds/Music_Loop_2_Full.wav');
+    this.load.audio('star-bounce', 'assets/star_bounce.wav');
     
     // Load portal sprite sheets
     this.load.spritesheet('start-portal', 'assets/start-portal.png', { frameWidth: 128, frameHeight: 128 });
@@ -345,21 +346,29 @@ function create() {
     });
     
     // Create bouncing star
-    const star = this.add.sprite(50, 50, 'star');
+    const star = this.add.sprite(100, 200, 'star'); // Start from middle of stage
     star.setScale(2); // Make the star bigger
     star.play('star-spin');
     
     // Add physics to the star
     this.physics.add.existing(star);
-    star.body.setBounce(1); // Perfect bounce (no energy loss)
+    star.body.setBounce(0.9); // Reduced from 1 to 0.6 for less bouncy behavior
     star.body.setCollideWorldBounds(true); // Keep it within the game bounds
-    star.body.setVelocity(150, 200); // Give it diagonal velocity (right and down)
+    star.body.setVelocity(10, 20); // Reduced velocity for slower movement (was 150, 200)
     star.body.setDamping(false); // Disable damping to maintain momentum
     star.body.setAngularDrag(0); // Disable angular drag to maintain spin
-    star.body.setMass(1); // Set mass to 1 for consistent physics
+    star.body.setMass(2); // Set mass to 1 for consistent physics
     
     // Add collision with platforms
-    this.physics.add.collider(star, world.platforms);
+    this.physics.add.collider(star, world.platforms, () => {
+        // Only play sound if the star has significant vertical velocity (is bouncing)
+        if (Math.abs(star.body.velocity.y) > 50) {
+            this.sound.play('star-bounce', { volume: 0.3 });
+        }
+    });
+    
+    // Store star reference for reset
+    this.bouncingStar = star;
     
     // Check for query parameters
     const urlParams = new URLSearchParams(window.location.search);
@@ -674,6 +683,13 @@ function create() {
                 updateOtherPlayerSprite(scene, player);
             }
         });
+        
+        // Reset bouncing star if it exists
+        if (this.bouncingStar) {
+            this.bouncingStar.x = 100;
+            this.bouncingStar.y = 200;
+            this.bouncingStar.body.setVelocity(10, 20);
+        }
         
         // Update player info
         this.updatePlayersInfo(players, croquetView.localPlayerId);
