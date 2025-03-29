@@ -260,6 +260,7 @@ function preload() {
     });
     
     this.load.spritesheet('food', 'assets/food3.png', { frameWidth: 32, frameHeight: 32 });
+    this.load.spritesheet('star', 'assets/starman.png', { frameWidth: 16, frameHeight: 16 });
     this.load.audio('boing', 'assets/sounds/Jump2.mp3');
     this.load.audio('win', 'assets/sounds/Checkpoint.mp3');
     this.load.audio('countdown', 'assets/sounds/countdown.wav');
@@ -334,6 +335,28 @@ function create() {
         frameRate: 10,
         repeat: -1
     });
+
+    // Create star animation
+    this.anims.create({
+        key: 'star-spin',
+        frames: this.anims.generateFrameNumbers('star', { start: 0, end: 11 }),
+        frameRate: 12,
+        repeat: -1
+    });
+    
+    // Create bouncing star
+    const star = this.add.sprite(200, 50, 'star');
+    star.setScale(2); // Make the star bigger
+    star.play('star-spin');
+    
+    // Add physics to the star
+    this.physics.add.existing(star);
+    star.body.setBounce(0.8); // Make it bouncy
+    star.body.setCollideWorldBounds(true); // Keep it within the game bounds
+    star.body.setVelocity(0, 200); // Give it initial downward velocity
+    
+    // Add collision with platforms
+    this.physics.add.collider(star, world.platforms);
     
     // Check for query parameters
     const urlParams = new URLSearchParams(window.location.search);
