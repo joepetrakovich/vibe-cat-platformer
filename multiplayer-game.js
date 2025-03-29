@@ -262,6 +262,9 @@ function preload() {
     this.load.spritesheet('food', 'assets/food3.png', { frameWidth: 32, frameHeight: 32 });
     this.load.audio('boing', 'assets/sounds/Jump2.mp3');
     this.load.audio('win', 'assets/sounds/Checkpoint.mp3');
+    this.load.audio('countdown', 'assets/sounds/countdown.wav');
+    this.load.audio('start', 'assets/sounds/start.wav');
+    this.load.audio('background-music', 'assets/sounds/Music_Loop_2_Full.wav');
     
     // Load portal sprite sheets
     this.load.spritesheet('start-portal', 'assets/start-portal.png', { frameWidth: 128, frameHeight: 128 });
@@ -677,7 +680,7 @@ function create() {
         countdownText.setDepth(110);
         
         // Play countdown sound
-        this.sound.play('boing', { volume: 0.2 });
+        this.sound.play('countdown', { volume: 0.3 });
         
         // Scale animation for the text
         this.tweens.add({
@@ -696,7 +699,7 @@ function create() {
                     // Update text
                     countdownText.setText(`${seconds}`);
                     // Play sound
-                    this.sound.play('boing', { volume: 0.2 });
+                    this.sound.play('countdown', { volume: 0.3 });
                     // New scale animation
                     this.tweens.add({
                         targets: countdownText,
@@ -708,7 +711,7 @@ function create() {
                     // Show "GET THE PIZZA!" message
                     countdownText.setFontSize('48px');
                     countdownText.setText('GET PIZZA!');
-                    this.sound.play('win', { volume: 0.4 });
+                    this.sound.play('start', { volume: 0.4 });
                     
                     // Scale and fade animation for final message
                     this.tweens.add({
@@ -938,10 +941,40 @@ function setupControls(scene) {
     jumpButton.setScrollFactor(0);
     jumpButton.setDepth(100);
 
+    // Add music toggle button text
+    const musicButtonText = scene.add.text(380, controlsY, '🔊', { 
+        fontSize: '24px', 
+        fill: '#fff' 
+    });
+    musicButtonText.setOrigin(0.5);
+    musicButtonText.setScrollFactor(0);
+    musicButtonText.setDepth(100);
+    musicButtonText.setInteractive();
+
     // Add button labels
     scene.add.text(60, controlsY, '←', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5).setDepth(100);
     scene.add.text(140, controlsY, '→', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5).setDepth(100);
     scene.add.text(320, controlsY, '↑', { fontSize: '32px', fill: '#fff' }).setOrigin(0.5).setDepth(100);
+
+    // Initialize background music
+    const backgroundMusic = scene.sound.add('background-music', {
+        volume: 0.3,
+        loop: true
+    });
+    
+    // Start playing background music
+    backgroundMusic.play();
+    
+    // Add click handler for music toggle
+    musicButtonText.on('pointerdown', () => {
+        if (backgroundMusic.isPlaying) {
+            backgroundMusic.pause();
+            musicButtonText.setText('🔈');
+        } else {
+            backgroundMusic.resume();
+            musicButtonText.setText('🔊');
+        }
+    });
 
     // Button event listeners
     leftButton.on('pointerdown', () => { 
