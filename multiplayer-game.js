@@ -45,7 +45,7 @@ const CONTROLS_HEIGHT = 50;
 
 // Croquet application name and API key
 const APP_NAME = "io.croquet.catplatformracer";
-const API_KEY = process.env.CROQUET_API_KEY || "REPLACE_WITH_YOUR_CROQUET_API_KEY"; // Read from .env file
+const API_KEY = process.env.MULTISYNQ_API_KEY
 
 // Create Phaser game instance
 let game;
@@ -226,6 +226,7 @@ let otherPlayerSprites = {}; // Store sprites for other players
 let playerInfoText;
 let winText;
 let isGameOver = false;
+let hasRainbowBoost = false; // Track if the cat has rainbow boost
 
 // Inactivity tracking
 let lastMoveTime = 0;
@@ -267,6 +268,7 @@ function preload() {
     this.load.audio('start', 'assets/sounds/start.wav');
     this.load.audio('background-music', 'assets/sounds/Music_Loop_2_Full.wav');
     this.load.audio('star-bounce', 'assets/star_bounce.wav');
+    this.load.audio('booster', 'assets/Booster.wav');
     
     // Load portal sprite sheets
     this.load.spritesheet('start-portal', 'assets/start-portal.png', { frameWidth: 128, frameHeight: 128 });
@@ -374,7 +376,7 @@ function create() {
     const urlParams = new URLSearchParams(window.location.search);
     const refUrl = urlParams.get('ref');
     const portalParam = urlParams.get('portal');
-    const username = urlParams.get('username'); // Add username parameter
+    const username = urlParams.get('username');
     const isPortalEntry = portalParam === 'true';
     
     // Determine starting position
@@ -439,31 +441,22 @@ function create() {
     
     // Store the username in the character for later use
     localCharacter.username = username;
-    
-    // Now add collision detection for start portal if it exists
-    if (this.startPortal) {
-        // Create the overlap detection but store the reference
-        const portalOverlap = this.physics.add.overlap(
-            localCharacter.sprite, 
-            this.startPortal, 
-            function() {
-                enterReturnPortal.call(this, this.returnUrl);
-            }, 
-            null, 
-            this
-        );
-        
-        // If player entered through portal, temporarily disable the collision to prevent immediate re-entry
-        if (isPortalEntry) {
-            // Disable the overlap initially
-            portalOverlap.active = false;
+
+    // Add collision between star and cat
+    this.physics.add.overlap(star, localCharacter.sprite, () => {
+        if (!hasRainbowBoost) {
+            // Play booster sound
+            this.sound.play('booster', { volume: 0.4 });
             
-            // Re-enable it after a delay
-            this.time.delayedCall(1500, () => {
-                portalOverlap.active = true;
-            });
+            // Enable rainbow trail
+            hasRainbowBoost = true;
+            localCharacter.enableRainbowTrail();
+            
+            // Make star disappear
+            star.setVisible(false);
+            star.body.enable = false;
         }
-    }
+    });
     
     // If entering through portal, play entrance animation
     if (isPortalEntry) {
@@ -667,6 +660,7 @@ function create() {
     
     this.resetGame = function(players) {
         isGameOver = false;
+        hasRainbowBoost = false; // Reset boost state
         
         // Reset local character position immediately
         const localPlayer = players[croquetView.localPlayerId];
@@ -675,6 +669,7 @@ function create() {
             localCharacter.sprite.y = localPlayer.y;
             localCharacter.setVelocity(0, 0);
             characterStateMachine.transition('idle');
+            localCharacter.disableRainbowTrail(); // Disable rainbow trail on reset
         }
         
         // Reset other player sprites immediately
@@ -689,6 +684,8 @@ function create() {
             this.bouncingStar.x = 100;
             this.bouncingStar.y = 200;
             this.bouncingStar.body.setVelocity(10, 20);
+            this.bouncingStar.setVisible(true);
+            this.bouncingStar.body.enable = true;
         }
         
         // Update player info

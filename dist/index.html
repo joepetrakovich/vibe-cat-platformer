@@ -1,4 +1,4 @@
-<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Vibecat - Multiplayer Cat Platformer</title><style>body {
+<!doctype html><html lang="en"><head><meta charset="UTF-8"><meta name="viewport" content="width=device-width,initial-scale=1,maximum-scale=1,user-scalable=no"><title>Multiplayer Cat Big Platform</title><style>body {
             margin: 0;
             padding: 0;
             background-color: #000;
@@ -31,6 +31,17 @@
             z-index: 1000;
         }
         
+        @keyframes slideDown {
+            0% {
+                top: -50px;
+                opacity: 0;
+            }
+            100% {
+                top: 10px;
+                opacity: 1;
+            }
+        }
+        
         #title {
             position: fixed;
             top: 10px;
@@ -44,6 +55,7 @@
             font-size: 14px;
             z-index: 1000;
             text-align: center;
+            animation: slideDown 1s ease-out forwards;
         }
         
         #title a {
@@ -53,4 +65,4 @@
         
         #title a:hover {
             text-decoration: underline;
-        }</style></head><body><div id="game"></div><div id="title">vibecat by <a href="https://x.com/slime_jpeg" target="_blank">@slime_jpeg</a></div><script src="main.js"></script></body></html>
+        }</style></head><body><div id="game"></div><div id="title">Multiplayer Cat Big Platform by <a href="https://x.com/slime_jpeg" target="_blank">@slime_jpeg</a></div><script src="main.js"></script></body></html>

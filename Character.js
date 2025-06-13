@@ -27,7 +27,8 @@ export class Character {
         };
         
         this.moveSpeed = 150;
-        this.jumpForce = 1200;
+        this.jumpForce = 800; // Reduced initial jump force
+        this.boostedJumpForce = 1200; // Higher jump force when boosted
         this.maxFallSpeed = 500;  // Maximum falling speed
         
         // Set the maximum vertical velocity
@@ -84,6 +85,16 @@ export class Character {
     }
 
     updateTrail() {
+        // Only create trails if rainbow boost is enabled
+        if (!this.hasRainbowTrail) {
+            // Remove any existing trails if rainbow boost is disabled
+            this.trailSprites.forEach(trail => {
+                trail.sprite.destroy();
+            });
+            this.trailSprites = [];
+            return;
+        }
+
         const currentTime = Date.now();
         
         // Get the current state from the sprite's animation key
@@ -130,5 +141,28 @@ export class Character {
             });
             this.trailSprites = [];
         }
+    }
+
+    enableRainbowTrail() {
+        // Enable rainbow trail by setting a flag
+        this.hasRainbowTrail = true;
+        // Reset trail sprites array
+        this.trailSprites = [];
+        // Reset last trail time
+        this.lastTrailTime = 0;
+        // Increase jump force when boosted
+        this.jumpForce = this.boostedJumpForce;
+    }
+
+    disableRainbowTrail() {
+        // Disable rainbow trail by setting a flag
+        this.hasRainbowTrail = false;
+        // Remove all existing trail sprites
+        this.trailSprites.forEach(trail => {
+            trail.sprite.destroy();
+        });
+        this.trailSprites = [];
+        // Reset jump force to normal
+        this.jumpForce = 800;
     }
 } 

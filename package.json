@@ -10,7 +10,7 @@
     "clean": "rm -rf dist"
   },
   "dependencies": {
-    "@croquet/croquet": "^1.1.0",
+    "@croquet/croquet": "^2.0.4",
     "phaser": "^3.70.0"
   },
   "devDependencies": {
